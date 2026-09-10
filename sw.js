@@ -1,9 +1,6 @@
-const CACHE_NAME = "checklist-pela-vida-v3";
+const CACHE_NAME = "checklist-pela-vida-v4";
 
 const APP_SHELL = [
-  "./",
-  "./index.html",
-  "./admin.html",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -40,6 +37,25 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // HTML (index.html, admin.html e a navegação entre páginas): sempre busca
+  // a versão mais nova na rede primeiro. Isso evita a demora de "várias
+  // recargas" para uma atualização aparecer. Só usa a cópia em cache se
+  // o dispositivo estiver offline.
+  const isHTML = req.mode === "navigate" || req.destination === "document" || req.url.endsWith(".html");
+  if (isHTML) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, res.clone()));
+          return res;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Ícones, imagens e manifest: cache primeiro (mais rápido, funciona
+  // offline), atualizando a cópia em segundo plano para a próxima visita.
   event.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req)
