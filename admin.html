@@ -146,6 +146,29 @@
   .stat-value{font-size:22px;font-weight:700;color:var(--header-dark);line-height:1.1;}
   .stat-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:4px;}
 
+  .dashboard-charts{display:flex;gap:12px;padding:14px 20px 6px;flex-wrap:wrap;}
+  .chart-card{
+    flex:1;min-width:240px;background:var(--card);border:1px solid var(--border);
+    border-radius:10px;padding:16px;
+  }
+  .chart-title{
+    display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;
+    color:var(--header-dark);margin:0 0 14px;text-transform:uppercase;letter-spacing:.3px;
+  }
+  .chart-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .chart-row:last-child{margin-bottom:0;}
+  .chart-label{
+    font-size:12px;color:var(--text);width:92px;flex:none;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .chart-bar-track{flex:1;background:var(--row-alt);border-radius:6px;height:11px;overflow:hidden;}
+  .chart-bar-fill{height:100%;border-radius:6px;transition:width .3s ease;}
+  .chart-card.chart-clientes .chart-bar-fill{background:linear-gradient(90deg, var(--teal), #58b6ae);}
+  .chart-card.chart-funcionarios .chart-bar-fill{background:linear-gradient(90deg, var(--accent-dark), var(--accent));}
+  .chart-card.chart-empresas .chart-bar-fill{background:linear-gradient(90deg, #4a5fc1, #7c92e8);}
+  .chart-count{font-size:11.5px;color:var(--muted);font-weight:700;width:20px;text-align:right;flex:none;}
+  .chart-empty{font-size:12px;color:var(--muted);text-align:center;padding:10px 0;margin:0;}
+
   /* ---------- Desktop / telas largas ---------- */
   @media (min-width: 860px){
     .wrap{max-width:1200px;}
@@ -155,6 +178,7 @@
     }
     .item-card, .client-card{margin:0;}
     .dashboard-stats{flex-wrap:nowrap;}
+    .dashboard-charts{flex-wrap:nowrap;}
     #identificacaoContainer{
       padding:0 20px;display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:0 14px;
     }
@@ -231,6 +255,7 @@
     <div id="viewClients" class="hidden">
       <div class="sub-list" id="clientsSubList">Toque em um cliente para ver o histórico de checklists dele.</div>
       <div class="dashboard-stats" id="dashboardStats"></div>
+      <div class="dashboard-charts" id="dashboardCharts"></div>
       <div id="clientsContainer"></div>
       <div id="clientHistoryContainer" class="hidden"></div>
     </div>
@@ -470,24 +495,49 @@ function escapeHtml(str){
   return div.innerHTML;
 }
 
+function tally_(arr){
+  const map = {};
+  arr.forEach(v => { if(!v) return; map[v] = (map[v] || 0) + 1; });
+  return Object.entries(map).sort((a, b) => b[1] - a[1]);
+}
+
+function renderChartCard_(title, icon, entries, colorClass){
+  const max = entries.length ? entries[0][1] : 0;
+  const rows = entries.slice(0, 5).map(([name, count]) => `
+    <div class="chart-row">
+      <span class="chart-label" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${max ? Math.max(6, Math.round(count / max * 100)) : 0}%"></div></div>
+      <span class="chart-count">${count}</span>
+    </div>
+  `).join('');
+  return `<div class="chart-card ${colorClass}">
+    <p class="chart-title">${icon} ${escapeHtml(title)}</p>
+    ${rows || '<p class="chart-empty">Sem dados suficientes.</p>'}
+  </div>`;
+}
+
 /* ---------- Dashboard e histórico por cliente ---------- */
 function renderClients(){
   const container = document.getElementById('clientsContainer');
   const statsEl = document.getElementById('dashboardStats');
+  const chartsEl = document.getElementById('dashboardCharts');
   document.getElementById('clientHistoryContainer').classList.add('hidden');
   document.getElementById('clientsSubList').textContent = 'Toque em um cliente para ver o histórico de checklists dele.';
   container.classList.remove('hidden');
   statsEl.classList.remove('hidden');
+  chartsEl.classList.remove('hidden');
 
   const items = getFilteredItems();
 
   if(allItems.length === 0){
     statsEl.innerHTML = '';
+    chartsEl.innerHTML = '';
     container.innerHTML = '<p class="empty-msg">Nenhum checklist enviado ainda.</p>';
     return;
   }
   if(items.length === 0){
     statsEl.innerHTML = '';
+    chartsEl.innerHTML = '';
     container.innerHTML = '<p class="empty-msg">Nenhum resultado para essa busca.</p>';
     return;
   }
@@ -507,6 +557,19 @@ function renderClients(){
     <div class="stat-card"><div class="stat-value">${items.length}</div><div class="stat-label">Checklist(s)</div></div>
     <div class="stat-card"><div class="stat-value">${formatDate(mostRecent.timestamp)}</div><div class="stat-label">Envio mais recente</div></div>
   `;
+
+  // Dashboard — rankings de clientes, funcionários e empresas
+  const clienteEntries = clientNames.map(name => [name, grouped[name].length]).sort((a,b)=>b[1]-a[1]);
+  const funcNomes = [];
+  const empresas = [];
+  items.forEach(it => (it.participantes || []).forEach(p => {
+    if(p.nome) funcNomes.push(p.nome);
+    if(p.empresa) empresas.push(p.empresa);
+  }));
+  chartsEl.innerHTML =
+    renderChartCard_('Clientes que mais aparecem', '🏢', clienteEntries, 'chart-clientes') +
+    renderChartCard_('Funcionários que mais aparecem', '👷', tally_(funcNomes), 'chart-funcionarios') +
+    renderChartCard_('Empresas que mais aparecem', '🏗️', tally_(empresas), 'chart-empresas');
 
   // Cartões por cliente, com contagem e data do último envio
   container.innerHTML = clientNames.map(name => {
@@ -532,6 +595,7 @@ function openClientHistory(encodedName){
 
   document.getElementById('clientsContainer').classList.add('hidden');
   document.getElementById('dashboardStats').classList.add('hidden');
+  document.getElementById('dashboardCharts').classList.add('hidden');
   document.getElementById('clientsSubList').textContent = `Histórico de "${name}"`;
 
   const historyContainer = document.getElementById('clientHistoryContainer');
