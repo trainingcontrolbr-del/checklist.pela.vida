@@ -8,7 +8,9 @@ const APP_SHELL = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-512-maskable.png",
-  "./icons/icon-180.png"
+  "./icons/icon-180.png",
+  "./cards/card-check-status.jpg",
+  "./cards/card-regras-vida.jpg"
 ];
 
 self.addEventListener("install", (event) => {
