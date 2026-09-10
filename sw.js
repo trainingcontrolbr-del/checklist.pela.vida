@@ -2,6 +2,7 @@ const CACHE_NAME = "checklist-pela-vida-v5";
 
 const APP_SHELL = [
   "./manifest.json",
+  "./manifest-admin.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-512-maskable.png",
