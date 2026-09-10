@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist Pela Vida — Admin</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0165DB">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pela Vida Admin">
+<style>
+  :root{
+    --header:#4f5b66; --header-dark:#3c4650; --bg:#eef0f3; --card:#ffffff;
+    --row-alt:#f5f6f8; --accent:#f2a52c; --accent-dark:#d88f1a; --teal:#1f6f78;
+    --text:#2c333a; --muted:#6b7580; --border:#dfe3e8; --ok:#2e8b57; --nok:#c0392b;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);}
+  .wrap{max-width:680px;margin:0 auto;min-height:100vh;background:var(--bg);}
+
+  .pin-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;
+    background:linear-gradient(160deg,var(--header) 0%,var(--header-dark) 100%);padding:24px;}
+  .pin-card{background:var(--card);border-radius:14px;padding:36px 28px;max-width:340px;width:100%;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.25);}
+  .shield{width:56px;height:56px;margin:0 auto 12px;border-radius:14px;object-fit:cover;display:block;}
+  .pin-card h1{font-size:19px;margin:0 0 4px;color:var(--header-dark);}
+  .pin-card p{font-size:13px;color:var(--muted);margin:0 0 22px;}
+  .pin-input{width:100%;font-size:26px;letter-spacing:10px;text-align:center;padding:12px;border:2px solid var(--border);border-radius:10px;outline:none;margin-bottom:14px;}
+  .pin-input:focus{border-color:var(--teal);}
+  .btn{width:100%;background:var(--teal);color:#fff;border:none;padding:13px;font-size:15px;font-weight:600;border-radius:10px;cursor:pointer;}
+  .btn:disabled{opacity:.6;cursor:default;}
+  .btn-outline{background:#fff;color:var(--teal);border:1.5px solid var(--teal);}
+  .pin-error{color:var(--nok);font-size:13px;margin-top:10px;min-height:16px;}
+
+  .header{background:var(--header);color:#fff;padding:18px 20px;display:flex;align-items:center;gap:14px;}
+  .header .shield{width:34px;height:34px;flex:none;margin:0;border-radius:8px;object-fit:cover;}
+  .header h1{font-size:18px;margin:0;font-weight:700;flex:1;}
+  .header button{background:rgba(255,255,255,.15);color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12.5px;cursor:pointer;}
+
+  section{padding:20px;}
+  .hidden{display:none !important;}
+
+  .sub-list{padding:6px 20px 20px;color:var(--muted);font-size:13px;}
+  .item-card{
+    background:var(--card);border:1px solid var(--border);border-radius:10px;
+    margin:0 20px 12px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;
+  }
+  .item-card:hover{border-color:var(--teal);}
+  .item-main p{margin:0;}
+  .item-name{font-size:14.5px;font-weight:600;}
+  .item-date{font-size:12px;color:var(--muted);margin-top:2px !important;}
+  .item-arrow{color:var(--muted);font-size:18px;}
+  .empty-msg{text-align:center;color:var(--muted);font-size:13.5px;padding:40px 20px;}
+
+  .section-title{display:flex;align-items:baseline;gap:8px;margin:0 0 6px;font-size:16px;font-weight:700;color:var(--header-dark);}
+  .section-sub{font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.5;}
+
+  textarea, input[type=text]{
+    width:100%;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:14px;
+    font-family:inherit;resize:vertical;background:#fff;
+  }
+  textarea:focus, input[type=text]:focus{outline:none;border-color:var(--teal);}
+
+  .ident-card{
+    display:flex;gap:10px;align-items:flex-start;background:var(--card);
+    border:1px solid var(--border);border-radius:10px;padding:12px;margin:0 20px 10px;
+  }
+  .ident-num{width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;flex:none;margin-top:2px;}
+  .ident-fields{flex:1;display:flex;flex-direction:column;gap:6px;}
+  .ident-input{width:100%;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit;background:#fff;}
+
+  .funcionario-card{background:var(--card);border:1px solid var(--border);border-radius:10px;margin:0 20px 16px;overflow:hidden;}
+  .funcionario-title{background:var(--row-alt);padding:12px 14px;font-size:14px;font-weight:700;color:var(--header-dark);}
+  .funcionario-title small{display:block;font-weight:400;color:var(--muted);font-size:11.5px;margin-top:2px;}
+  table.epi{width:100%;border-collapse:collapse;}
+  table.epi th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;text-align:center;width:54px;}
+  table.epi th:first-child{text-align:left;width:auto;}
+  table.epi td{padding:10px;text-align:center;border-top:1px solid var(--border);}
+  table.epi tr:nth-child(even) td{background:var(--row-alt);}
+  table.epi td.item-label{text-align:left;font-size:13px;padding-left:12px;border-left:3px solid var(--accent);}
+  input[type=radio]{width:18px;height:18px;accent-color:var(--teal);cursor:pointer;}
+  .epi-outros-input{width:100%;border:1px solid var(--border);border-radius:6px;padding:7px 9px;font-size:12.5px;font-family:inherit;background:#fff;}
+
+  .fotos-list{margin:0 20px 16px;}
+  .fotos-list a{display:block;font-size:13px;color:var(--teal);padding:6px 0;}
+
+  .submit-wrap{padding:10px 20px 40px;display:flex;gap:10px;}
+  .submit-wrap .btn{flex:1;}
+  .status-msg{text-align:center;font-size:13.5px;margin-top:12px;min-height:18px;}
+  .status-msg.ok{color:var(--ok);}
+  .status-msg.err{color:var(--nok);}
+
+  .header button{background:rgba(255,255,255,.15);color:#fff;border:none;padding:8px 10px;border-radius:8px;font-size:12.5px;cursor:pointer;flex:none;}
+  .header button.active{background:#fff;color:var(--header-dark);}
+
+  .tabs{display:flex;gap:8px;padding:14px 20px 0;}
+  .tab-btn{
+    flex:1;background:var(--card);border:1px solid var(--border);color:var(--muted);
+    padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
+  }
+  .tab-btn.active{background:var(--teal);border-color:var(--teal);color:#fff;}
+
+  .meta-header{
+    display:flex;gap:10px;padding:14px 20px;background:var(--row-alt);
+    border-bottom:1px solid var(--border);
+  }
+  .meta-field{flex:1;}
+  .meta-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+  .meta-field input{width:100%;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:14px;font-family:inherit;background:#fff;}
+  .meta-field input:focus{outline:none;border-color:var(--teal);}
+
+  .item-cliente{font-size:11px;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px !important;}
+
+  .client-card{
+    background:var(--card);border:1px solid var(--border);border-radius:10px;
+    margin:0 20px 12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;
+  }
+  .client-card:hover{border-color:var(--teal);}
+  .client-name{font-size:14.5px;font-weight:700;margin:0;}
+  .client-count{font-size:12px;color:var(--muted);margin:2px 0 0 !important;}
+  .client-back{margin:0 20px 12px;background:none;border:none;color:var(--teal);font-size:13.5px;font-weight:600;cursor:pointer;padding:4px 0;}
+
+  .toast-wrap{
+    position:fixed;top:0;left:0;right:0;z-index:9999;
+    display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px;pointer-events:none;
+  }
+  .toast{
+    pointer-events:auto;max-width:460px;width:100%;background:var(--header-dark);color:#fff;
+    border-radius:12px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.3);
+    display:flex;align-items:center;gap:12px;
+    animation:toast-in .25s ease;
+  }
+  @keyframes toast-in{ from{ transform:translateY(-16px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+  .toast .toast-icon{font-size:22px;flex:none;}
+  .toast .toast-body{flex:1;}
+  .toast .toast-title{font-size:13.5px;font-weight:700;margin:0;}
+  .toast .toast-sub{font-size:12px;color:#cfd6da;margin:2px 0 0;}
+  .toast .toast-actions{display:flex;gap:8px;flex:none;}
+  .toast button{border:none;border-radius:7px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;}
+  .toast .toast-view{background:var(--accent-dark);color:#fff;}
+  .toast .toast-dismiss{background:rgba(255,255,255,.15);color:#fff;}
+</style>
+</head>
+<body>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="wrap">
+
+  <!-- ============ PIN SCREEN ============ -->
+  <div class="pin-screen" id="pinScreen">
+    <div class="pin-card">
+      <img class="shield" src="icons/icon-192.png" alt="Checklist Pela Vida">
+      <h1>Checklist Pela Vida</h1>
+      <p>Área do administrador. Digite o PIN de admin para continuar.</p>
+      <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" class="pin-input" id="pinInput" placeholder="• • • •">
+      <button class="btn" id="pinSubmit">Entrar</button>
+      <div class="pin-error" id="pinError"></div>
+    </div>
+  </div>
+
+  <!-- ============ LIST SCREEN ============ -->
+  <div id="listScreen" class="hidden">
+    <div class="header">
+      <img class="shield" src="icons/icon-192.png" alt="Checklist Pela Vida">
+      <h1>Checklists enviados</h1>
+      <button id="notifBtn" title="Ativar avisos de novo checklist">🔔</button>
+      <button id="refreshBtn">Atualizar</button>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tabAll">Recentes</button>
+      <button class="tab-btn" id="tabByClient">Por cliente</button>
+    </div>
+
+    <div id="viewAll">
+      <div class="sub-list">Toque em um checklist para ver e editar os dados.</div>
+      <div id="listContainer"></div>
+    </div>
+
+    <div id="viewClients" class="hidden">
+      <div class="sub-list" id="clientsSubList">Toque em um cliente para ver o histórico de checklists dele.</div>
+      <div id="clientsContainer"></div>
+      <div id="clientHistoryContainer" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- ============ EDIT SCREEN ============ -->
+  <div id="editScreen" class="hidden">
+    <div class="header">
+      <button id="backBtn">← Voltar</button>
+      <h1>Editar checklist</h1>
+    </div>
+
+    <div class="meta-header">
+      <div class="meta-field">
+        <label for="editCliente">Cliente</label>
+        <input type="text" id="editCliente" placeholder="Nome do cliente">
+      </div>
+      <div class="meta-field">
+        <label for="editEstacao">Estação</label>
+        <input type="text" id="editEstacao" placeholder="Nome da estação">
+      </div>
+    </div>
+
+    <section>
+      <p class="section-title">1. APR</p>
+      <p class="section-sub">Fotos enviadas com este checklist (não editáveis por aqui).</p>
+    </section>
+    <div class="fotos-list" id="fotosList"></div>
+
+    <section>
+      <p class="section-title">2. Identificação</p>
+      <p class="section-sub">Corrija nome, função ou empresa de qualquer participante.</p>
+    </section>
+    <div id="identificacaoContainer"></div>
+
+    <section>
+      <p class="section-title">3. EPIs e Documentos</p>
+    </section>
+    <div id="funcionariosContainer"></div>
+
+    <section>
+      <p class="section-title">4. Outros <span style="font-weight:400;font-size:12px;color:var(--muted);">(aspectos físicos e psicológicos)</span></p>
+      <p class="section-sub">Texto salvo com o registro. Edite livremente.</p>
+      <textarea id="outros" rows="3"></textarea>
+    </section>
+
+    <section>
+      <p class="section-title">5. Observação</p>
+      <textarea id="observacao" rows="3"></textarea>
+    </section>
+
+    <div class="submit-wrap">
+      <button class="btn btn-outline" id="cancelEditBtn">Cancelar</button>
+      <button class="btn" id="saveBtn">Salvar alterações</button>
+    </div>
+    <div class="status-msg" id="editStatus" style="padding:0 20px 30px;"></div>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================================
+   Cole aqui a MESMA URL do Apps Script usada no index.html
+   ===================================================================== */
+const API_URL = "https://script.google.com/macros/s/AKfycbx3xrs4Rd9WNH_QiyMjqOhAsZCeHmxwOOUprA9rdGkQA5qWrsGaeuuB7vU95wuTO1gS9g/exec";
+
+const NUM_FUNCIONARIOS = 7;
+const EPI_ITEMS = [
+  { key: "epi_basico", label: "🦺 Usando os EPIs básicos (Capacete, protetor auricular, uniforme)" },
+  { key: "colete", label: "🦺 Colete salva-vidas" },
+  { key: "cracha", label: "Crachá (obrigatório na Vale)" },
+  { key: "apr_art", label: "Assinou a APR / ART?" },
+  { key: "treinamentos", label: "Treinamentos realizados (Integração, ART)" }
+];
+
+let adminPin = "";
+let currentId = null;
+let allItems = [];
+let knownIds = null; // null = ainda não carregou a 1ª vez
+let currentClient = null;
+let notifEnabled = false;
+
+/* ---------- PIN ---------- */
+document.getElementById('pinSubmit').addEventListener('click', verifyAdminPin);
+document.getElementById('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') verifyAdminPin(); });
+
+async function verifyAdminPin(){
+  ensureAudioContext(); // desbloqueia o áudio aproveitando este clique do usuário
+  const pin = document.getElementById('pinInput').value.trim();
+  const errEl = document.getElementById('pinError');
+  errEl.textContent = "";
+  if(!pin){ errEl.textContent = "Digite o PIN."; return; }
+
+  const btn = document.getElementById('pinSubmit');
+  btn.disabled = true; btn.textContent = "Verificando...";
+
+  try{
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "verifyAdminPin", adminPin: pin })
+    });
+    const data = await res.json();
+    if(data.ok){
+      adminPin = pin;
+      document.getElementById('pinScreen').classList.add('hidden');
+      document.getElementById('listScreen').classList.remove('hidden');
+      loadList();
+      startPolling();
+    } else {
+      errEl.textContent = "PIN incorreto. Tente novamente.";
+    }
+  }catch(err){
+    errEl.textContent = "Erro de conexão. Verifique sua internet e tente novamente.";
+  }
+  btn.disabled = false; btn.textContent = "Entrar";
+}
+
+/* ---------- Abas ---------- */
+document.getElementById('tabAll').addEventListener('click', ()=>switchTab('all'));
+document.getElementById('tabByClient').addEventListener('click', ()=>switchTab('clients'));
+
+function switchTab(tab){
+  document.getElementById('tabAll').classList.toggle('active', tab==='all');
+  document.getElementById('tabByClient').classList.toggle('active', tab==='clients');
+  document.getElementById('viewAll').classList.toggle('hidden', tab!=='all');
+  document.getElementById('viewClients').classList.toggle('hidden', tab!=='clients');
+  if(tab === 'clients'){
+    currentClient = null;
+    renderClients();
+  }
+}
+
+/* ---------- Lista ---------- */
+document.getElementById('refreshBtn').addEventListener('click', loadList);
+
+async function loadList(){
+  const container = document.getElementById('listContainer');
+  container.innerHTML = '<p class="empty-msg">Carregando...</p>';
+  try{
+    const items = await fetchSubmissions();
+    if(items === null){
+      container.innerHTML = '<p class="empty-msg">Erro ao carregar.</p>';
+      return;
+    }
+    allItems = items;
+    if(knownIds === null){
+      knownIds = new Set(allItems.map(i => i.id)); // baseline, sem popup no primeiro carregamento
+    }
+    renderList(allItems, container, 'Nenhum checklist enviado ainda.');
+    if(!document.getElementById('viewClients').classList.contains('hidden')){
+      if(currentClient){
+        openClientHistory(currentClient);
+      } else {
+        renderClients();
+      }
+    }
+  }catch(err){
+    container.innerHTML = '<p class="empty-msg">Erro de conexão.</p>';
+  }
+}
+
+async function fetchSubmissions(){
+  try{
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "listSubmissions", adminPin })
+    });
+    const data = await res.json();
+    return data.ok ? data.items : null;
+  }catch(err){
+    return null;
+  }
+}
+
+function renderList(items, container, emptyMsg){
+  if(items.length === 0){
+    container.innerHTML = `<p class="empty-msg">${emptyMsg}</p>`;
+    return;
+  }
+  container.innerHTML = items.map(item => `
+    <div class="item-card" onclick="openSubmission('${item.id}')">
+      <div class="item-main">
+        <p class="item-cliente">${escapeHtml(item.cliente || 'Sem cliente')}${item.estacao ? ' — ' + escapeHtml(item.estacao) : ''}</p>
+        <p class="item-name">${escapeHtml(item.resumo)}</p>
+        <p class="item-date">${formatDate(item.timestamp)}</p>
+      </div>
+      <div class="item-arrow">›</div>
+    </div>
+  `).join('');
+}
+
+function formatDate(iso){
+  try{
+    const d = new Date(iso);
+    return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  }catch(e){ return iso; }
+}
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ---------- Histórico por cliente ---------- */
+function renderClients(){
+  const container = document.getElementById('clientsContainer');
+  document.getElementById('clientHistoryContainer').classList.add('hidden');
+  document.getElementById('clientsSubList').textContent = 'Toque em um cliente para ver o histórico de checklists dele.';
+  container.classList.remove('hidden');
+
+  if(allItems.length === 0){
+    container.innerHTML = '<p class="empty-msg">Nenhum checklist enviado ainda.</p>';
+    return;
+  }
+
+  const grouped = {};
+  allItems.forEach(item=>{
+    const key = item.cliente || 'Sem cliente';
+    if(!grouped[key]) grouped[key] = [];
+    grouped[key].push(item);
+  });
+
+  const clientNames = Object.keys(grouped).sort((a,b)=>a.localeCompare(b, 'pt-BR'));
+  container.innerHTML = clientNames.map(name => `
+    <div class="client-card" onclick="openClientHistory('${encodeURIComponent(name)}')">
+      <div>
+        <p class="client-name">${escapeHtml(name)}</p>
+        <p class="client-count">${grouped[name].length} checklist(s)</p>
+      </div>
+      <div class="item-arrow">›</div>
+    </div>
+  `).join('');
+}
+
+function openClientHistory(encodedName){
+  const name = decodeURIComponent(encodedName);
+  currentClient = name;
+  const filtered = allItems.filter(i => (i.cliente || 'Sem cliente') === name);
+
+  document.getElementById('clientsContainer').classList.add('hidden');
+  document.getElementById('clientsSubList').textContent = `Histórico de "${name}"`;
+
+  const historyContainer = document.getElementById('clientHistoryContainer');
+  historyContainer.classList.remove('hidden');
+  historyContainer.innerHTML = '<button class="client-back" id="clientBackBtn">← Todos os clientes</button><div id="clientHistoryList"></div>';
+  document.getElementById('clientBackBtn').addEventListener('click', ()=>{
+    currentClient = null;
+    renderClients();
+  });
+  renderList(filtered, document.getElementById('clientHistoryList'), 'Nenhum checklist deste cliente.');
+}
+
+/* ---------- Som de notificação ---------- */
+let audioCtx = null;
+
+function ensureAudioContext(){
+  if(!audioCtx){
+    try{
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }catch(e){ audioCtx = null; }
+  } else if(audioCtx.state === 'suspended'){
+    audioCtx.resume();
+  }
+}
+
+function playNotificationSound(){
+  if(!audioCtx) return;
+  if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+
+  const now = audioCtx.currentTime;
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.35, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+  gain.connect(audioCtx.destination);
+
+  [880, 1320].forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    osc.connect(gain);
+    osc.start(now + i * 0.14);
+    osc.stop(now + i * 0.14 + 0.35);
+  });
+}
+
+/* ---------- Popup de novo checklist ---------- */
+document.getElementById('notifBtn').addEventListener('click', toggleNotifications);
+
+function toggleNotifications(){
+  ensureAudioContext();
+  if(!notifEnabled){
+    if('Notification' in window && Notification.permission !== 'granted'){
+      Notification.requestPermission().then(perm=>{
+        notifEnabled = true;
+        document.getElementById('notifBtn').classList.add('active');
+        showToast('🔔', 'Avisos ativados', 'Você será avisado quando um novo checklist chegar.');
+      });
+    } else {
+      notifEnabled = true;
+      document.getElementById('notifBtn').classList.add('active');
+      showToast('🔔', 'Avisos ativados', 'Você será avisado quando um novo checklist chegar.');
+    }
+  } else {
+    notifEnabled = false;
+    document.getElementById('notifBtn').classList.remove('active');
+  }
+}
+
+function startPolling(){
+  setInterval(checkForNewSubmissions, 20000); // a cada 20s
+}
+
+async function checkForNewSubmissions(){
+  if(knownIds === null) return; // ainda não carregou a lista pela 1ª vez
+  const items = await fetchSubmissions();
+  if(items === null) return;
+
+  const novos = items.filter(item => !knownIds.has(item.id));
+  if(novos.length === 0) return;
+
+  allItems = items;
+  novos.forEach(item => knownIds.add(item.id));
+
+  playNotificationSound();
+
+  // Atualiza as listas visíveis, se estiverem na tela
+  if(!document.getElementById('viewAll').classList.contains('hidden')){
+    renderList(allItems, document.getElementById('listContainer'), 'Nenhum checklist enviado ainda.');
+  }
+  if(!document.getElementById('viewClients').classList.contains('hidden')){
+    if(currentClient){ openClientHistory(encodeURIComponent(currentClient)); }
+    else { renderClients(); }
+  }
+
+  // Popup no app
+  novos.forEach(item => {
+    const sub = (item.cliente || 'Sem cliente') + (item.estacao ? ' — ' + item.estacao : '');
+    showToast('📋', 'Novo checklist enviado', sub + ' · ' + item.resumo, item.id);
+
+    if(notifEnabled && 'Notification' in window && Notification.permission === 'granted'){
+      const n = new Notification('Novo checklist — Pela Vida', { body: sub + ' · ' + item.resumo });
+      n.onclick = () => { window.focus(); openSubmission(item.id); };
+    }
+  });
+}
+
+function showToast(icon, title, sub, id){
+  const wrap = document.getElementById('toastWrap');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `
+    <div class="toast-icon">${icon}</div>
+    <div class="toast-body">
+      <p class="toast-title">${escapeHtml(title)}</p>
+      <p class="toast-sub">${escapeHtml(sub)}</p>
+    </div>
+    <div class="toast-actions">
+      ${id ? '<button class="toast-view">Ver</button>' : ''}
+      <button class="toast-dismiss">✕</button>
+    </div>
+  `;
+  wrap.appendChild(toast);
+
+  const remove = () => toast.remove();
+  toast.querySelector('.toast-dismiss').addEventListener('click', remove);
+  if(id){
+    toast.querySelector('.toast-view').addEventListener('click', () => {
+      remove();
+      document.getElementById('listScreen').classList.add('hidden');
+      openSubmission(id);
+    });
+  }
+  setTimeout(remove, 10000);
+}
+
+/* ---------- Abrir / editar um checklist ---------- */
+async function openSubmission(id){
+  currentId = id;
+  document.getElementById('listScreen').classList.add('hidden');
+  document.getElementById('editScreen').classList.remove('hidden');
+  document.getElementById('editStatus').textContent = "Carregando registro...";
+  document.getElementById('editStatus').className = "status-msg";
+
+  try{
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "getSubmission", adminPin, id })
+    });
+    const data = await res.json();
+    if(!data.ok){
+      document.getElementById('editStatus').textContent = data.message || "Erro ao carregar registro.";
+      document.getElementById('editStatus').className = "status-msg err";
+      return;
+    }
+    renderSubmission(data.submission);
+    document.getElementById('editStatus').textContent = "";
+  }catch(err){
+    document.getElementById('editStatus').textContent = "Erro de conexão.";
+    document.getElementById('editStatus').className = "status-msg err";
+  }
+}
+
+function renderSubmission(sub){
+  document.getElementById('editCliente').value = sub.cliente || "";
+  document.getElementById('editEstacao').value = sub.estacao || "";
+
+  // Fotos (somente visualização)
+  const fotosList = document.getElementById('fotosList');
+  fotosList.innerHTML = sub.fotos.length
+    ? sub.fotos.map(url => `<a href="${url}" target="_blank" rel="noopener">📷 Abrir foto</a>`).join('')
+    : '<p class="section-sub" style="margin:0;">Nenhuma foto anexada.</p>';
+
+  // Identificação
+  const identContainer = document.getElementById('identificacaoContainer');
+  let identHtml = "";
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    const p = sub.identificacao.find(x => x.numero === i) || {};
+    identHtml += `<div class="ident-card">
+      <div class="ident-num">${i}</div>
+      <div class="ident-fields">
+        <input type="text" class="ident-input" data-idx="${i}" data-field="nome" placeholder="Nome" value="${escapeHtml(p.nome || '')}">
+        <input type="text" class="ident-input" data-idx="${i}" data-field="funcao" placeholder="Função" value="${escapeHtml(p.funcao || '')}">
+        <input type="text" class="ident-input" data-idx="${i}" data-field="empresa" placeholder="Empresa" value="${escapeHtml(p.empresa || '')}">
+      </div>
+    </div>`;
+  }
+  identContainer.innerHTML = identHtml;
+
+  // Funcionários / EPIs
+  const funcContainer = document.getElementById('funcionariosContainer');
+  let funcHtml = "";
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    const f = sub.funcionarios.find(x => x.funcionario === i) || {};
+    funcHtml += `<div class="funcionario-card">
+      <div class="funcionario-title">FUNCIONÁRIO ${i}</div>
+      <table class="epi">
+        <tr><th></th><th>OK</th><th>NOK</th><th>N/A</th></tr>`;
+    EPI_ITEMS.forEach(item=>{
+      const val = f[item.key] || "";
+      funcHtml += `<tr>
+        <td class="item-label">${item.label}</td>
+        <td><input type="radio" name="f${i}_${item.key}" value="OK" ${val==="OK"?"checked":""}></td>
+        <td><input type="radio" name="f${i}_${item.key}" value="NOK" ${val==="NOK"?"checked":""}></td>
+        <td><input type="radio" name="f${i}_${item.key}" value="N/A" ${val==="N/A"?"checked":""}></td>
+      </tr>`;
+    });
+    funcHtml += `<tr>
+        <td class="item-label">Outros (especifique)</td>
+        <td colspan="3"><input type="text" class="epi-outros-input" id="f${i}_outros" value="${escapeHtml(f.outros || '')}"></td>
+      </tr>`;
+    funcHtml += `</table></div>`;
+  }
+  funcContainer.innerHTML = funcHtml;
+
+  document.getElementById('outros').value = sub.outros || "";
+  document.getElementById('observacao').value = sub.observacao || "";
+}
+
+document.getElementById('backBtn').addEventListener('click', backToList);
+document.getElementById('cancelEditBtn').addEventListener('click', backToList);
+function backToList(){
+  document.getElementById('editScreen').classList.add('hidden');
+  document.getElementById('listScreen').classList.remove('hidden');
+  currentId = null;
+}
+
+document.getElementById('saveBtn').addEventListener('click', saveSubmission);
+
+async function saveSubmission(){
+  const statusEl = document.getElementById('editStatus');
+  statusEl.textContent = "Salvando...";
+  statusEl.className = "status-msg";
+
+  const identificacao = [];
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    identificacao.push({
+      numero: i,
+      nome: document.querySelector(`[data-idx="${i}"][data-field="nome"]`).value.trim(),
+      funcao: document.querySelector(`[data-idx="${i}"][data-field="funcao"]`).value.trim(),
+      empresa: document.querySelector(`[data-idx="${i}"][data-field="empresa"]`).value.trim()
+    });
+  }
+
+  const funcionarios = [];
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    const entry = { funcionario: i };
+    EPI_ITEMS.forEach(item=>{
+      const el = document.querySelector(`input[name="f${i}_${item.key}"]:checked`);
+      entry[item.key] = el ? el.value : "";
+    });
+    entry.outros = document.getElementById(`f${i}_outros`).value.trim();
+    funcionarios.push(entry);
+  }
+
+  const payload = {
+    action: "updateSubmission",
+    adminPin,
+    id: currentId,
+    cliente: document.getElementById('editCliente').value.trim(),
+    estacao: document.getElementById('editEstacao').value.trim(),
+    identificacao,
+    funcionarios,
+    outros: document.getElementById('outros').value.trim(),
+    observacao: document.getElementById('observacao').value.trim()
+  };
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = "Salvando...";
+
+  try{
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(data.ok){
+      statusEl.textContent = "Alterações salvas com sucesso.";
+      statusEl.className = "status-msg ok";
+      loadList();
+    } else {
+      statusEl.textContent = data.message || "Não foi possível salvar.";
+      statusEl.className = "status-msg err";
+    }
+  }catch(err){
+    statusEl.textContent = "Erro de conexão.";
+    statusEl.className = "status-msg err";
+  }
+  btn.disabled = false; btn.textContent = "Salvar alterações";
+}
+
+/* ---------- PWA: registra o service worker ---------- */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

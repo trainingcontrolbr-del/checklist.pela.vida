@@ -1,0 +1,17 @@
+{
+  "name": "Checklist Pela Vida",
+  "short_name": "Pela Vida",
+  "description": "Checklist de segurança HidroMares: identificação, EPIs, APR e condições físicas/psicológicas antes do início da atividade.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0165DB",
+  "theme_color": "#0165DB",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

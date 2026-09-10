@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist Pela Vida — HidroMares</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0165DB">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pela Vida">
+<style>
+  :root{
+    --header:#4f5b66;
+    --header-dark:#3c4650;
+    --bg:#eef0f3;
+    --card:#ffffff;
+    --row-alt:#f5f6f8;
+    --accent:#f2a52c;
+    --accent-dark:#d88f1a;
+    --teal:#1f6f78;
+    --text:#2c333a;
+    --muted:#6b7580;
+    --border:#dfe3e8;
+    --ok:#2e8b57;
+    --nok:#c0392b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  .wrap{max-width:640px;margin:0 auto;min-height:100vh;background:var(--bg);}
+
+  /* ---------- PIN SCREEN ---------- */
+  .pin-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    background:linear-gradient(160deg,var(--header) 0%,var(--header-dark) 100%);
+    padding:24px;
+  }
+  .pin-card{
+    background:var(--card);
+    border-radius:14px;
+    padding:36px 28px;
+    max-width:340px;
+    width:100%;
+    text-align:center;
+    box-shadow:0 12px 30px rgba(0,0,0,.25);
+  }
+  .shield{width:56px;height:56px;margin:0 auto 12px;border-radius:14px;object-fit:cover;display:block;}
+  .pin-card h1{font-size:19px;margin:0 0 4px;color:var(--header-dark);}
+  .pin-card p{font-size:13px;color:var(--muted);margin:0 0 22px;}
+  .pin-input{
+    width:100%;
+    font-size:26px;
+    letter-spacing:10px;
+    text-align:center;
+    padding:12px;
+    border:2px solid var(--border);
+    border-radius:10px;
+    outline:none;
+    margin-bottom:14px;
+  }
+  .pin-input:focus{border-color:var(--teal);}
+  .btn{
+    width:100%;
+    background:var(--teal);
+    color:#fff;
+    border:none;
+    padding:13px;
+    font-size:15px;
+    font-weight:600;
+    border-radius:10px;
+    cursor:pointer;
+  }
+  .btn:disabled{opacity:.6;cursor:default;}
+  .pin-error{color:var(--nok);font-size:13px;margin-top:10px;min-height:16px;}
+
+  /* ---------- FORM SCREEN ---------- */
+  .header{
+    background:var(--header);
+    color:#fff;
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .header .shield{width:38px;height:38px;flex:none;margin:0;border-radius:9px;object-fit:cover;}
+  .header h1{font-size:19px;margin:0;font-weight:700;}
+
+  .notice{
+    background:#e4e7ec;
+    color:var(--muted);
+    font-size:12.5px;
+    padding:14px 20px;
+    border-bottom:1px solid var(--border);
+  }
+
+  section{padding:20px;}
+  .section-title{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    margin:0 0 6px;
+    font-size:16px;
+    font-weight:700;
+    color:var(--header-dark);
+  }
+  .section-num{color:var(--accent-dark);}
+  .section-sub{font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.5;}
+  .section-sub b{color:var(--text);}
+
+  .example-box{
+    background:var(--row-alt);
+    border-left:3px solid var(--accent);
+    padding:10px 14px;
+    font-size:12.5px;
+    border-radius:6px;
+    margin-bottom:14px;
+    color:var(--muted);
+  }
+  .example-box ol{margin:6px 0 0;padding-left:18px;}
+
+  textarea, input[type=text]{
+    width:100%;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:12px;
+    font-size:14px;
+    font-family:inherit;
+    resize:vertical;
+    background:#fff;
+  }
+  textarea:focus, input[type=text]:focus{outline:none;border-color:var(--teal);}
+
+  .outros-select-wrap{position:relative;}
+  .outros-toggle{
+    width:100%;display:flex;align-items:center;justify-content:space-between;
+    border:1px solid var(--border);border-radius:8px;padding:12px;
+    background:#fff;font-size:14px;color:var(--text);cursor:pointer;font-family:inherit;
+  }
+  .outros-toggle:focus{outline:none;border-color:var(--teal);}
+  .outros-chev{color:var(--muted);transition:transform .15s ease;}
+  .outros-toggle.open .outros-chev{transform:rotate(180deg);}
+  .outros-panel{
+    margin-top:8px;border:1px solid var(--border);border-radius:8px;
+    background:#fff;overflow:hidden;
+  }
+  .outros-check-row{
+    display:flex;align-items:center;gap:10px;padding:11px 12px;
+    border-top:1px solid var(--border);font-size:13.5px;cursor:pointer;
+  }
+  .outros-check-row:first-child{border-top:none;}
+  .outros-check-row input[type=checkbox]{width:17px;height:17px;accent-color:var(--teal);cursor:pointer;}
+  .outros-detail{padding:0 12px 12px 39px;}
+  .outros-detail-input{
+    width:100%;border:1px solid var(--border);border-radius:6px;
+    padding:9px 10px;font-size:13px;font-family:inherit;background:var(--row-alt);
+  }
+  .outros-detail-input:focus{outline:none;border-color:var(--teal);}
+
+  .meta-header{
+    display:flex;gap:10px;padding:14px 20px;background:var(--row-alt);
+    border-bottom:1px solid var(--border);
+  }
+  .meta-field{flex:1;}
+  .meta-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+  .meta-field input{
+    width:100%;border:1px solid var(--border);border-radius:8px;padding:10px;
+    font-size:14px;font-family:inherit;background:#fff;
+  }
+  .meta-field input:focus{outline:none;border-color:var(--teal);}
+
+  .has-error{border-color:var(--nok) !important; box-shadow:0 0 0 1px var(--nok);}
+  .field-error-text{color:var(--nok);font-size:12px;margin:-6px 20px 14px;}
+
+  .ident-card{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px;
+    margin:0 20px 10px;
+  }
+  .ident-num{
+    width:26px;height:26px;border-radius:50%;
+    background:var(--teal);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:12.5px;font-weight:700;flex:none;margin-top:2px;
+  }
+  .ident-fields{flex:1;display:flex;flex-direction:column;gap:6px;}
+  .ident-input{
+    width:100%;border:1px solid var(--border);border-radius:6px;
+    padding:8px 10px;font-size:13px;font-family:inherit;background:#fff;
+  }
+  .ident-input:focus{outline:none;border-color:var(--teal);}
+
+  .funcionario-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    margin:0 20px 16px;
+    overflow:hidden;
+  }
+  .funcionario-title{
+    background:var(--row-alt);
+    padding:12px 14px;
+    font-size:14px;
+    font-weight:700;
+    color:var(--header-dark);
+  }
+  .funcionario-title small{display:block;font-weight:400;color:var(--muted);font-size:11.5px;margin-top:2px;}
+
+  table.epi{width:100%;border-collapse:collapse;}
+  table.epi th{
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    padding:8px 10px;
+    text-align:center;
+    width:70px;
+  }
+  table.epi th:first-child{text-align:left;width:auto;}
+  table.epi td{padding:10px;text-align:center;border-top:1px solid var(--border);}
+  table.epi tr:nth-child(even) td{background:var(--row-alt);}
+  table.epi td.item-label{
+    text-align:left;
+    font-size:13px;
+    padding-left:12px;
+    border-left:3px solid var(--accent);
+  }
+  input[type=radio]{width:18px;height:18px;accent-color:var(--teal);cursor:pointer;}
+  .epi-outros-input{
+    width:100%;border:1px solid var(--border);border-radius:6px;
+    padding:7px 9px;font-size:12.5px;font-family:inherit;background:#fff;
+  }
+  .epi-outros-input:focus{outline:none;border-color:var(--teal);}
+  .func-name{font-weight:400;color:var(--muted);}
+
+  /* APR photos section */
+  .apr-block{background:var(--card);border:1px solid var(--border);border-radius:10px;margin:0 20px 16px;padding:16px;}
+  .apr-actions{display:flex;gap:10px;margin-top:10px;}
+  .apr-btn{
+    flex:1;
+    border:1.5px dashed var(--teal);
+    background:#fff;
+    color:var(--teal);
+    padding:12px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    text-align:center;
+  }
+  .apr-thumbs{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+  .apr-thumb{position:relative;width:84px;height:84px;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+  .apr-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .apr-thumb button{
+    position:absolute;top:2px;right:2px;
+    background:rgba(0,0,0,.6);color:#fff;border:none;
+    width:20px;height:20px;border-radius:50%;font-size:12px;cursor:pointer;line-height:1;
+  }
+
+  .warn-box{
+    background:#fff5e6;
+    border-left:3px solid var(--accent);
+    padding:10px 14px;
+    font-size:12.5px;
+    border-radius:6px;
+    margin-bottom:12px;
+    color:#7a5200;
+  }
+
+  .submit-wrap{padding:10px 20px 40px;}
+  #submitBtn{background:var(--accent-dark);}
+  .status-msg{text-align:center;font-size:13.5px;margin-top:12px;min-height:18px;}
+  .status-msg.ok{color:var(--ok);}
+  .status-msg.err{color:var(--nok);}
+
+  .success-screen{
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    padding:24px;text-align:center;
+  }
+  .success-screen .check{font-size:52px;margin-bottom:10px;}
+  .success-screen h2{margin:0 0 8px;color:var(--header-dark);}
+  .success-screen p{color:var(--muted);font-size:14px;max-width:280px;}
+  .success-screen .btn{max-width:220px;margin-top:20px;}
+
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ============ PIN SCREEN ============ -->
+  <div class="pin-screen" id="pinScreen">
+    <div class="pin-card">
+      <img class="shield" src="icons/icon-192.png" alt="Checklist Pela Vida">
+      <h1>Checklist Pela Vida</h1>
+      <p>Digite o PIN de acesso fornecido pela sua liderança para continuar.</p>
+      <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" class="pin-input" id="pinInput" placeholder="• • • •">
+      <button class="btn" id="pinSubmit">Entrar</button>
+      <div class="pin-error" id="pinError"></div>
+    </div>
+  </div>
+
+  <!-- ============ FORM SCREEN ============ -->
+  <div id="formScreen" class="hidden">
+
+    <div class="header">
+      <img class="shield" src="icons/icon-192.png" alt="Checklist Pela Vida">
+      <h1>CHECKLIST PELA VIDA</h1>
+    </div>
+
+    <div class="notice">
+      Quando você enviar este formulário, ele não coletará automaticamente seus detalhes, como nome e endereço de e-mail, a menos que você mesmo o forneça.
+    </div>
+
+    <div class="meta-header">
+      <div class="meta-field">
+        <label for="clienteInput">Cliente</label>
+        <input type="text" id="clienteInput" placeholder="Nome do cliente">
+      </div>
+      <div class="meta-field">
+        <label for="estacaoInput">Estação</label>
+        <input type="text" id="estacaoInput" placeholder="Nome da estação">
+      </div>
+    </div>
+
+    <section>
+      <p class="section-sub">
+        O <b>Checklist Pela Vida</b> tem como objetivo assegurar que todas as atividades sejam iniciadas de forma <b>segura, organizada e em conformidade</b> com os requisitos de segurança e saúde no trabalho.
+      </p>
+      <p class="section-sub">
+        Por meio deste documento, são realizadas verificações prévias relacionadas à <b>identificação do trabalhador</b>, <b>utilização correta de Equipamentos de Proteção Individual (EPIs)</b>, regularidade da <b>documentação obrigatória</b> e <b>condições físicas e mentais</b> para execução das atividades.
+      </p>
+    </section>
+
+    <!-- Instruções (sem numeração) -->
+    <section>
+      <div class="warn-box">📌 Preencha as informações abaixo antes de iniciar a atividade</div>
+    </section>
+
+    <!-- 1. APR -->
+    <section style="padding-bottom:0;">
+      <p class="section-title"><span class="section-num">1.</span> APR</p>
+      <p class="section-sub">Tire uma foto de cada APR/ART assinada referente à atividade. Você pode anexar mais de uma foto.</p>
+    </section>
+    <div class="apr-block">
+      <div class="apr-actions">
+        <label class="apr-btn">📷 Tirar foto
+          <input type="file" accept="image/*" capture="environment" id="aprCamera" class="hidden">
+        </label>
+        <label class="apr-btn">🖼️ Escolher da galeria
+          <input type="file" accept="image/*" multiple id="aprGallery" class="hidden">
+        </label>
+      </div>
+      <div class="apr-thumbs" id="aprThumbs"></div>
+    </div>
+
+    <!-- 2. Identificação -->
+    <section>
+      <p class="section-title"><span class="section-num">2.</span> IDENTIFICAÇÃO</p>
+      <p class="section-sub">Preencha o nome completo, a função e a empresa de cada participante. Cada linha corresponde ao funcionário de mesmo número no item "EPIs e Documentos".</p>
+      <div class="warn-box">Obs: Antes de confirmar os fornecedores, cheque com a equipe de suporte operacional da HidroMares se os fornecedores estão autorizados.</div>
+    </section>
+
+    <div id="identificacaoContainer"></div>
+
+    <!-- 3. EPIs e Documentos -->
+    <section>
+      <p class="section-title"><span class="section-num">3.</span> EPIs e Documentos</p>
+      <p class="section-sub">Obs: Os nomes abaixo são preenchidos automaticamente de acordo com a relação descrita acima em "IDENTIFICAÇÃO"</p>
+    </section>
+
+    <div id="funcionariosContainer"></div>
+
+    <!-- 11. Outros -->
+    <section>
+      <p class="section-title"><span class="section-num">4.</span> OUTROS <span style="font-weight:400;font-size:12px;color:var(--muted);">(aspectos físicos e psicológicos)</span></p>
+      <p class="section-sub">
+        Este campo tem como objetivo verificar se algum trabalhador <b>está em condições físicas e psicológicas adequadas</b> para iniciar suas atividades com segurança. A avaliação deve ser feita de forma respeitosa e objetiva, buscando identificar fatores que possam comprometer a atenção, a capacidade de reação ou a tomada de decisão durante o trabalho.
+      </p>
+      <div class="warn-box">✅ Preencha por meio de texto livre. Ex: "João disse que está com enjoo e não está se sentindo bem"</div>
+      <div class="warn-box">✅ Qualquer registro abaixo, a liderança da HidroMares deve ser comunicada antes do início das atividades.</div>
+      <p class="section-sub"><b>IMPORTANTE:</b> Abaixo, descreva APENAS aquele colaborador que sinalizar alguma condição, caso não, deixe em branco.</p>
+
+      <div class="outros-select-wrap">
+        <button type="button" class="outros-toggle" id="outrosToggle">
+          <span id="outrosToggleLabel">Selecionar colaborador(es) com alguma condição</span>
+          <span class="outros-chev">▾</span>
+        </button>
+        <div class="outros-panel hidden" id="outrosPanel"></div>
+      </div>
+    </section>
+
+    <!-- 12. Observação -->
+    <section>
+      <p class="section-title"><span class="section-num">5.</span> OBSERVAÇÃO <span style="font-weight:400;font-size:12px;color:var(--muted);">(item não obrigatório)</span></p>
+      <p class="section-sub">Caso queira, faça aqui alguma observação ou comentário sobre a atividade</p>
+      <textarea id="observacao" rows="3" placeholder="Insira sua resposta"></textarea>
+    </section>
+
+    <div class="submit-wrap">
+      <button class="btn" id="submitBtn">Enviar checklist</button>
+      <div class="status-msg" id="statusMsg"></div>
+    </div>
+  </div>
+
+  <!-- ============ SUCCESS SCREEN ============ -->
+  <div id="successScreen" class="success-screen hidden">
+    <div class="check">✅</div>
+    <h2>Checklist enviado!</h2>
+    <p>Seu registro foi salvo com sucesso. Obrigado por cuidar da segurança de todos.</p>
+    <button class="btn" id="newChecklistBtn">Novo checklist</button>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO
+   Cole aqui a URL do seu Web App do Google Apps Script (termina em /exec)
+   ===================================================================== */
+const API_URL = "https://script.google.com/macros/s/AKfycbx3xrs4Rd9WNH_QiyMjqOhAsZCeHmxwOOUprA9rdGkQA5qWrsGaeuuB7vU95wuTO1gS9g/exec";
+
+const NUM_FUNCIONARIOS = 7;
+const EPI_ITEMS = [
+  { key: "epi_basico", label: "🦺 Usando os EPIs básicos (Capacete, protetor auricular, uniforme)" },
+  { key: "colete", label: "🦺 Colete salva-vidas" },
+  { key: "cracha", label: "Crachá (obrigatório na Vale)" },
+  { key: "apr_art", label: "Assinou a APR / ART?" },
+  { key: "treinamentos", label: "Treinamentos realizados (Integração, ART)" }
+];
+
+let aprPhotos = []; // {name, dataUrl}
+let sessionPin = "";
+
+/* ---------- Monta os cartões de Identificação (Nome / Função / Empresa) ---------- */
+function buildIdentificacao(){
+  const container = document.getElementById('identificacaoContainer');
+  let html = "";
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    html += `<div class="ident-card">
+      <div class="ident-num">${i}</div>
+      <div class="ident-fields">
+        <input type="text" class="ident-input" data-idx="${i}" data-field="nome" placeholder="Nome">
+        <input type="text" class="ident-input" data-idx="${i}" data-field="funcao" placeholder="Função">
+        <input type="text" class="ident-input" data-idx="${i}" data-field="empresa" placeholder="Empresa">
+      </div>
+    </div>`;
+  }
+  container.innerHTML = html;
+
+  // Ao digitar o nome, atualiza automaticamente o título do funcionário no item 3
+  // e o rótulo correspondente na lista suspensa do item 4 (Outros)
+  container.querySelectorAll('input[data-field="nome"]').forEach(input=>{
+    input.addEventListener('input', ()=>{
+      const idx = input.dataset.idx;
+      const nome = input.value.trim();
+      const nameEl = document.getElementById('funcName' + idx);
+      if(nameEl) nameEl.textContent = nome ? " — " + nome : "";
+
+      const labelEl = document.getElementById('outrosLabel' + idx);
+      if(labelEl) labelEl.textContent = nome || ("Funcionário " + idx);
+      const detailInput = document.getElementById('outrosDetailInput' + idx);
+      if(detailInput) detailInput.placeholder = "Descreva a condição de " + (nome || ("Funcionário " + idx));
+    });
+  });
+}
+buildIdentificacao();
+
+/* ---------- Lista suspensa de colaboradores (item 4 - OUTROS) ---------- */
+function nomeParticipante(idx){
+  const input = document.querySelector(`input[data-idx="${idx}"][data-field="nome"]`);
+  const nome = input ? input.value.trim() : "";
+  return nome || ("Funcionário " + idx);
+}
+
+function buildOutrosPanel(){
+  const panel = document.getElementById('outrosPanel');
+  let html = "";
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    html += `<label class="outros-check-row">
+      <input type="checkbox" class="outros-check" id="outrosCheck${i}" data-idx="${i}">
+      <span id="outrosLabel${i}">${nomeParticipante(i)}</span>
+    </label>
+    <div class="outros-detail hidden" id="outrosDetail${i}">
+      <input type="text" class="outros-detail-input" id="outrosDetailInput${i}" placeholder="Descreva a condição de ${nomeParticipante(i)}">
+    </div>`;
+  }
+  panel.innerHTML = html;
+
+  panel.querySelectorAll('.outros-check').forEach(chk=>{
+    chk.addEventListener('change', ()=>{
+      const idx = chk.dataset.idx;
+      const detail = document.getElementById('outrosDetail' + idx);
+      detail.classList.toggle('hidden', !chk.checked);
+      updateOutrosToggleLabel();
+      if(chk.checked){
+        document.getElementById('outrosDetailInput' + idx).focus();
+      }
+    });
+  });
+}
+buildOutrosPanel();
+
+function updateOutrosToggleLabel(){
+  const checked = document.querySelectorAll('.outros-check:checked').length;
+  const labelEl = document.getElementById('outrosToggleLabel');
+  labelEl.textContent = checked > 0
+    ? checked + " colaborador(es) selecionado(s)"
+    : "Selecionar colaborador(es) com alguma condição";
+}
+
+document.getElementById('outrosToggle').addEventListener('click', ()=>{
+  const panel = document.getElementById('outrosPanel');
+  const btn = document.getElementById('outrosToggle');
+  panel.classList.toggle('hidden');
+  btn.classList.toggle('open');
+});
+
+function collectOutros(){
+  const entries = [];
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    const chk = document.getElementById('outrosCheck' + i);
+    if(chk && chk.checked){
+      const nome = nomeParticipante(i);
+      const desc = document.getElementById('outrosDetailInput' + i).value.trim();
+      entries.push(nome + (desc ? ": " + desc : " (sem descrição informada)"));
+    }
+  }
+  return entries.length ? entries.join("\n") : "";
+}
+
+/* ---------- Monta os blocos de funcionário dinamicamente ---------- */
+function buildFuncionarios(){
+  const container = document.getElementById('funcionariosContainer');
+  let html = "";
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    html += `<div class="funcionario-card">
+      <div class="funcionario-title">FUNCIONÁRIO ${i}<span class="func-name" id="funcName${i}"></span>
+        <small>O funcionário corresponde ao número que você citou acima na IDENTIFICAÇÃO</small>
+      </div>
+      <table class="epi">
+        <tr><th></th><th>OK</th><th>NOK</th><th>N/A</th></tr>`;
+    EPI_ITEMS.forEach(item=>{
+      html += `<tr>
+        <td class="item-label">${item.label}</td>
+        <td><input type="radio" name="f${i}_${item.key}" value="OK"></td>
+        <td><input type="radio" name="f${i}_${item.key}" value="NOK"></td>
+        <td><input type="radio" name="f${i}_${item.key}" value="N/A"></td>
+      </tr>`;
+    });
+    html += `<tr>
+        <td class="item-label">Outros (especifique)</td>
+        <td colspan="3"><input type="text" class="epi-outros-input" id="f${i}_outros" placeholder="Opcional"></td>
+      </tr>`;
+    html += `</table></div>`;
+  }
+  container.innerHTML = html;
+}
+buildFuncionarios();
+
+/* ---------- PIN ---------- */
+document.getElementById('pinSubmit').addEventListener('click', verifyPin);
+document.getElementById('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') verifyPin(); });
+
+async function verifyPin(){
+  const pin = document.getElementById('pinInput').value.trim();
+  const errEl = document.getElementById('pinError');
+  errEl.textContent = "";
+  if(!pin){ errEl.textContent = "Digite o PIN."; return; }
+
+  const btn = document.getElementById('pinSubmit');
+  btn.disabled = true; btn.textContent = "Verificando...";
+
+  try{
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "verifyPin", pin })
+    });
+    const data = await res.json();
+    if(data.ok){
+      sessionPin = pin;
+      document.getElementById('pinScreen').classList.add('hidden');
+      document.getElementById('formScreen').classList.remove('hidden');
+    } else {
+      errEl.textContent = "PIN incorreto. Tente novamente.";
+    }
+  }catch(err){
+    errEl.textContent = "Erro de conexão. Verifique sua internet e tente novamente.";
+  }
+  btn.disabled = false; btn.textContent = "Entrar";
+}
+
+/* ---------- Fotos da APR ---------- */
+document.getElementById('aprCamera').addEventListener('change', e=>handleFiles(e.target.files));
+document.getElementById('aprGallery').addEventListener('change', e=>handleFiles(e.target.files));
+
+function handleFiles(fileList){
+  Array.from(fileList).forEach(file=>{
+    compressImage(file, dataUrl=>{
+      aprPhotos.push({ name: file.name || ("apr_" + Date.now() + ".jpg"), dataUrl });
+      renderThumbs();
+    });
+  });
+}
+
+function compressImage(file, callback){
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const maxW = 1280;
+      const scale = Math.min(1, maxW / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      callback(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderThumbs(){
+  const wrap = document.getElementById('aprThumbs');
+  wrap.innerHTML = aprPhotos.map((p, idx)=>`
+    <div class="apr-thumb">
+      <img src="${p.dataUrl}">
+      <button onclick="removePhoto(${idx})" type="button">✕</button>
+    </div>
+  `).join('');
+}
+function removePhoto(idx){
+  aprPhotos.splice(idx,1);
+  renderThumbs();
+}
+
+/* ---------- Envio do checklist ---------- */
+document.getElementById('submitBtn').addEventListener('click', submitChecklist);
+
+function collectFuncionarios(){
+  const out = [];
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    const entry = { funcionario: i };
+    EPI_ITEMS.forEach(item=>{
+      const el = document.querySelector(`input[name="f${i}_${item.key}"]:checked`);
+      entry[item.key] = el ? el.value : "";
+    });
+    const outrosEl = document.getElementById(`f${i}_outros`);
+    entry.outros = outrosEl ? outrosEl.value.trim() : "";
+    out.push(entry);
+  }
+  return out;
+}
+
+function collectIdentificacao(){
+  const out = [];
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    const nome = document.querySelector(`input[data-idx="${i}"][data-field="nome"]`).value.trim();
+    const funcao = document.querySelector(`input[data-idx="${i}"][data-field="funcao"]`).value.trim();
+    const empresa = document.querySelector(`input[data-idx="${i}"][data-field="empresa"]`).value.trim();
+    out.push({ numero: i, nome, funcao, empresa });
+  }
+  return out;
+}
+
+/* ---------- Validação com destaque em vermelho ---------- */
+function clearErrors(){
+  document.querySelectorAll('.has-error').forEach(el=>el.classList.remove('has-error'));
+  document.querySelectorAll('.field-error-text').forEach(el=>el.remove());
+}
+
+function addError(el, msg){
+  el.classList.add('has-error');
+  const err = document.createElement('div');
+  err.className = 'field-error-text';
+  err.textContent = msg;
+  el.insertAdjacentElement('afterend', err);
+}
+
+function validateChecklist(){
+  clearErrors();
+  let firstError = null;
+  let hasError = false;
+  const flagFirst = el => { hasError = true; if(!firstError) firstError = el; };
+
+  // Cabeçalho — Cliente e Estação
+  const clienteInput = document.getElementById('clienteInput');
+  const estacaoInput = document.getElementById('estacaoInput');
+  if(!clienteInput.value.trim()){
+    addError(clienteInput, 'Informe o cliente.');
+    flagFirst(clienteInput);
+  }
+  if(!estacaoInput.value.trim()){
+    addError(estacaoInput, 'Informe a estação.');
+    flagFirst(estacaoInput);
+  }
+
+  // 1. APR — exige ao menos uma foto
+  if(aprPhotos.length === 0){
+    const aprBlock = document.querySelector('.apr-block');
+    addError(aprBlock, 'Adicione ao menos uma foto da APR.');
+    flagFirst(aprBlock);
+  }
+
+  // 2. Identificação — linhas parciais são inválidas; exige ao menos uma linha completa
+  let completos = 0;
+  document.querySelectorAll('.ident-card').forEach(card=>{
+    const nome = card.querySelector('[data-field="nome"]').value.trim();
+    const funcao = card.querySelector('[data-field="funcao"]').value.trim();
+    const empresa = card.querySelector('[data-field="empresa"]').value.trim();
+    const algumPreenchido = nome || funcao || empresa;
+    const tudoPreenchido = nome && funcao && empresa;
+    if(algumPreenchido && !tudoPreenchido){
+      addError(card, 'Preencha nome, função e empresa, ou deixe a linha em branco.');
+      flagFirst(card);
+    }
+    if(tudoPreenchido) completos++;
+  });
+  if(completos === 0){
+    const container = document.getElementById('identificacaoContainer');
+    addError(container, 'Preencha ao menos um participante completo.');
+    flagFirst(container);
+  }
+
+  // 3. EPIs e Documentos — cada participante preenchido precisa responder todos os itens
+  const funcCards = document.querySelectorAll('.funcionario-card');
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    const nomeInput = document.querySelector(`[data-idx="${i}"][data-field="nome"]`);
+    const nome = nomeInput ? nomeInput.value.trim() : "";
+    if(!nome) continue;
+    let completo = true;
+    EPI_ITEMS.forEach(item=>{
+      if(!document.querySelector(`input[name="f${i}_${item.key}"]:checked`)) completo = false;
+    });
+    if(!completo){
+      const card = funcCards[i-1];
+      addError(card, 'Responda OK, NOK ou N/A em todos os itens deste funcionário.');
+      flagFirst(card);
+    }
+  }
+
+  // 4. Outros — se um nome está marcado, a descrição é obrigatória
+  document.querySelectorAll('.outros-check:checked').forEach(chk=>{
+    const idx = chk.dataset.idx;
+    const input = document.getElementById('outrosDetailInput' + idx);
+    if(!input.value.trim()){
+      addError(input, 'Descreva a condição ou desmarque o nome.');
+      flagFirst(document.getElementById('outrosPanel'));
+    }
+  });
+
+  if(hasError && firstError){
+    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  return !hasError;
+}
+
+async function submitChecklist(){
+  const statusEl = document.getElementById('statusMsg');
+  statusEl.textContent = "";
+  statusEl.className = "status-msg";
+
+  if(!validateChecklist()){
+    statusEl.textContent = "Corrija os itens destacados em vermelho antes de enviar.";
+    statusEl.className = "status-msg err";
+    return;
+  }
+
+  const identificacao = collectIdentificacao();
+
+  const payload = {
+    action: "submit",
+    pin: sessionPin,
+    cliente: document.getElementById('clienteInput').value.trim(),
+    estacao: document.getElementById('estacaoInput').value.trim(),
+    identificacao,
+    funcionarios: collectFuncionarios(),
+    aprPhotos: aprPhotos.map(p=>({ name: p.name, dataUrl: p.dataUrl })),
+    outros: collectOutros(),
+    observacao: document.getElementById('observacao').value.trim()
+  };
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = "Enviando...";
+  statusEl.textContent = "Enviando checklist, aguarde...";
+
+  try{
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(data.ok){
+      document.getElementById('formScreen').classList.add('hidden');
+      document.getElementById('successScreen').classList.remove('hidden');
+    } else {
+      statusEl.textContent = data.message || "Não foi possível enviar. Tente novamente.";
+      statusEl.className = "status-msg err";
+    }
+  }catch(err){
+    statusEl.textContent = "Erro de conexão. Tente novamente.";
+    statusEl.className = "status-msg err";
+  }
+  btn.disabled = false; btn.textContent = "Enviar checklist";
+}
+
+document.getElementById('newChecklistBtn').addEventListener('click', ()=>{
+  document.getElementById('clienteInput').value = "";
+  document.getElementById('estacaoInput').value = "";
+  document.querySelectorAll('.ident-input').forEach(i=>i.value="");
+  document.querySelectorAll('.func-name').forEach(el=>el.textContent="");
+  document.querySelectorAll('input[type=radio]').forEach(r=>r.checked=false);
+  document.querySelectorAll('.epi-outros-input').forEach(i=>i.value="");
+  document.querySelectorAll('.outros-check').forEach(c=>{ c.checked = false; });
+  document.querySelectorAll('.outros-detail').forEach(d=>d.classList.add('hidden'));
+  document.querySelectorAll('.outros-detail-input').forEach(i=>i.value="");
+  updateOutrosToggleLabel();
+  document.getElementById('outrosPanel').classList.add('hidden');
+  document.getElementById('outrosToggle').classList.remove('open');
+  document.getElementById('observacao').value = "";
+  aprPhotos = [];
+  renderThumbs();
+  document.getElementById('successScreen').classList.add('hidden');
+  document.getElementById('formScreen').classList.remove('hidden');
+  window.scrollTo(0,0);
+});
+
+/* ---------- PWA: registra o service worker ---------- */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
