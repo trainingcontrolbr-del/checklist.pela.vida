@@ -158,9 +158,10 @@
   }
   .outros-check-row{
     display:flex;align-items:center;gap:10px;padding:11px 12px;
-    border-top:1px solid var(--border);font-size:13.5px;cursor:pointer;
+    font-size:13.5px;cursor:pointer;
   }
-  .outros-check-row:first-child{border-top:none;}
+  .outros-row{border-top:1px solid var(--border);}
+  .outros-row:first-of-type{border-top:none;}
   .outros-check-row input[type=checkbox]{width:17px;height:17px;accent-color:var(--teal);cursor:pointer;}
   .outros-detail{padding:0 12px 12px 39px;}
   .outros-detail-input{
@@ -180,6 +181,12 @@
     font-size:14px;font-family:inherit;background:#fff;
   }
   .meta-field input:focus{outline:none;border-color:var(--teal);}
+
+  .empty-note{
+    margin:0 20px 16px;padding:14px;background:var(--row-alt);border:1px dashed var(--border);
+    border-radius:8px;font-size:13px;color:var(--muted);text-align:center;
+  }
+  .outros-empty-note{padding:14px 12px;font-size:12.5px;color:var(--muted);text-align:center;}
 
   .has-error{border-color:var(--nok) !important; box-shadow:0 0 0 1px var(--nok);}
   .field-error-text{color:var(--nok);font-size:12px;margin:-6px 20px 14px;}
@@ -347,7 +354,7 @@
         O <b>Checklist Pela Vida</b> tem como objetivo assegurar que todas as atividades sejam iniciadas de forma <b>segura, organizada e em conformidade</b> com os requisitos de segurança e saúde no trabalho.
       </p>
       <p class="section-sub">
-        Por meio deste documento, são realizadas verificações prévias relacionadas à <b>identificação do trabalhador</b>, <b>utilização correta de Equipamentos de Proteção Individual (EPIs)</b>, regularidade da <b>documentação obrigatória</b> e <b>condições físicas e mentais</b> para execução das atividades.
+        Por meio deste documento, são realizadas verificações prévias relacionadas à <b>identificação do trabalhador</b>, <b>utilização correta de Equipamentos de Proteção Individual (EPIs)</b>, regularidade da <b>documentação obrigatória</b> e <b>condições físicas e psicológicas</b> para execução das atividades.
       </p>
     </section>
 
@@ -468,11 +475,14 @@ function buildIdentificacao(){
   container.innerHTML = html;
 
   // Ao digitar o nome, atualiza automaticamente o título do funcionário no item 3
-  // e o rótulo correspondente na lista suspensa do item 4 (Outros)
+  // e o rótulo correspondente na lista suspensa do item 4 (Outros), além de
+  // mostrar/ocultar esses itens conforme o participante existe ou não
   container.querySelectorAll('input[data-field="nome"]').forEach(input=>{
     input.addEventListener('input', ()=>{
       const idx = input.dataset.idx;
       const nome = input.value.trim();
+      const hasName = !!nome;
+
       const nameEl = document.getElementById('funcName' + idx);
       if(nameEl) nameEl.textContent = nome ? " — " + nome : "";
 
@@ -480,6 +490,30 @@ function buildIdentificacao(){
       if(labelEl) labelEl.textContent = nome || ("Funcionário " + idx);
       const detailInput = document.getElementById('outrosDetailInput' + idx);
       if(detailInput) detailInput.placeholder = "Descreva a condição de " + (nome || ("Funcionário " + idx));
+
+      // Item 3 — só mostra o cartão do funcionário se ele foi identificado
+      const funcCard = document.getElementById('funcCard' + idx);
+      if(funcCard){
+        funcCard.classList.toggle('hidden', !hasName);
+        updateFuncEmptyState();
+      }
+
+      // Item 4 — só mostra o nome na lista suspensa se ele foi identificado
+      const outrosRow = document.getElementById('outrosRow' + idx);
+      if(outrosRow){
+        outrosRow.classList.toggle('hidden', !hasName);
+        updateOutrosEmptyState();
+        // Se o nome foi apagado, desmarca e limpa qualquer seleção pendente
+        if(!hasName){
+          const chk = document.getElementById('outrosCheck' + idx);
+          if(chk && chk.checked){
+            chk.checked = false;
+            document.getElementById('outrosDetail' + idx).classList.add('hidden');
+            document.getElementById('outrosDetailInput' + idx).value = "";
+            updateOutrosToggleLabel();
+          }
+        }
+      }
     });
   });
 }
@@ -494,14 +528,16 @@ function nomeParticipante(idx){
 
 function buildOutrosPanel(){
   const panel = document.getElementById('outrosPanel');
-  let html = "";
+  let html = `<p class="outros-empty-note" id="outrosEmptyMsg">Preencha a Identificação para liberar os nomes aqui.</p>`;
   for(let i=1;i<=NUM_FUNCIONARIOS;i++){
-    html += `<label class="outros-check-row">
-      <input type="checkbox" class="outros-check" id="outrosCheck${i}" data-idx="${i}">
-      <span id="outrosLabel${i}">${nomeParticipante(i)}</span>
-    </label>
-    <div class="outros-detail hidden" id="outrosDetail${i}">
-      <input type="text" class="outros-detail-input" id="outrosDetailInput${i}" placeholder="Descreva a condição de ${nomeParticipante(i)}">
+    html += `<div class="outros-row hidden" id="outrosRow${i}">
+      <label class="outros-check-row">
+        <input type="checkbox" class="outros-check" id="outrosCheck${i}" data-idx="${i}">
+        <span id="outrosLabel${i}">${nomeParticipante(i)}</span>
+      </label>
+      <div class="outros-detail hidden" id="outrosDetail${i}">
+        <input type="text" class="outros-detail-input" id="outrosDetailInput${i}" placeholder="Descreva a condição de ${nomeParticipante(i)}">
+      </div>
     </div>`;
   }
   panel.innerHTML = html;
@@ -519,6 +555,12 @@ function buildOutrosPanel(){
   });
 }
 buildOutrosPanel();
+
+function updateOutrosEmptyState(){
+  const anyVisible = document.querySelectorAll('.outros-row:not(.hidden)').length > 0;
+  const msg = document.getElementById('outrosEmptyMsg');
+  if(msg) msg.classList.toggle('hidden', anyVisible);
+}
 
 function updateOutrosToggleLabel(){
   const checked = document.querySelectorAll('.outros-check:checked').length;
@@ -551,9 +593,9 @@ function collectOutros(){
 /* ---------- Monta os blocos de funcionário dinamicamente ---------- */
 function buildFuncionarios(){
   const container = document.getElementById('funcionariosContainer');
-  let html = "";
+  let html = `<p class="empty-note" id="funcEmptyMsg">Preencha a Identificação para liberar os funcionários aqui.</p>`;
   for(let i=1;i<=NUM_FUNCIONARIOS;i++){
-    html += `<div class="funcionario-card">
+    html += `<div class="funcionario-card hidden" id="funcCard${i}">
       <div class="funcionario-title">FUNCIONÁRIO ${i}<span class="func-name" id="funcName${i}"></span>
         <small>O funcionário corresponde ao número que você citou acima na IDENTIFICAÇÃO</small>
       </div>
@@ -576,6 +618,12 @@ function buildFuncionarios(){
   container.innerHTML = html;
 }
 buildFuncionarios();
+
+function updateFuncEmptyState(){
+  const anyVisible = document.querySelectorAll('.funcionario-card:not(.hidden)').length > 0;
+  const msg = document.getElementById('funcEmptyMsg');
+  if(msg) msg.classList.toggle('hidden', anyVisible);
+}
 
 /* ---------- PIN ---------- */
 document.getElementById('pinSubmit').addEventListener('click', verifyPin);
@@ -830,13 +878,11 @@ async function submitChecklist(){
 document.getElementById('newChecklistBtn').addEventListener('click', ()=>{
   document.getElementById('clienteInput').value = "";
   document.getElementById('estacaoInput').value = "";
-  document.querySelectorAll('.ident-input').forEach(i=>i.value="");
-  document.querySelectorAll('.func-name').forEach(el=>el.textContent="");
-  document.querySelectorAll('input[type=radio]').forEach(r=>r.checked=false);
-  document.querySelectorAll('.epi-outros-input').forEach(i=>i.value="");
-  document.querySelectorAll('.outros-check').forEach(c=>{ c.checked = false; });
-  document.querySelectorAll('.outros-detail').forEach(d=>d.classList.add('hidden'));
-  document.querySelectorAll('.outros-detail-input').forEach(i=>i.value="");
+  buildIdentificacao();
+  buildFuncionarios();
+  buildOutrosPanel();
+  updateFuncEmptyState();
+  updateOutrosEmptyState();
   updateOutrosToggleLabel();
   document.getElementById('outrosPanel').classList.add('hidden');
   document.getElementById('outrosToggle').classList.remove('open');
