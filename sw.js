@@ -1,4 +1,4 @@
-const CACHE_NAME = "checklist-pela-vida-v1";
+const CACHE_NAME = "checklist-pela-vida-v3";
 
 const APP_SHELL = [
   "./",
