@@ -45,9 +45,10 @@
   .hidden{display:none !important;}
 
   .sub-list{padding:6px 20px 20px;color:var(--muted);font-size:13px;}
+  #listContainer, #clientsContainer, #clientHistoryList{padding:0 20px 4px;}
   .item-card{
     background:var(--card);border:1px solid var(--border);border-radius:10px;
-    margin:0 20px 12px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;
+    margin:0 0 12px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;
   }
   .item-card:hover{border-color:var(--teal);}
   .item-main p{margin:0;}
@@ -125,12 +126,46 @@
 
   .client-card{
     background:var(--card);border:1px solid var(--border);border-radius:10px;
-    margin:0 20px 12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;
+    margin:0 0 12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;
   }
   .client-card:hover{border-color:var(--teal);}
   .client-name{font-size:14.5px;font-weight:700;margin:0;}
   .client-count{font-size:12px;color:var(--muted);margin:2px 0 0 !important;}
+  .client-last{font-size:11.5px;color:var(--muted);margin:2px 0 0 !important;}
   .client-back{margin:0 20px 12px;background:none;border:none;color:var(--teal);font-size:13.5px;font-weight:600;cursor:pointer;padding:4px 0;}
+
+  .search-wrap{padding:12px 20px 0;}
+  .search-wrap input{
+    width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;
+    font-size:13.5px;font-family:inherit;background:#fff;
+  }
+  .search-wrap input:focus{outline:none;border-color:var(--teal);}
+
+  .dashboard-stats{display:flex;gap:10px;padding:16px 20px 4px;flex-wrap:wrap;}
+  .stat-card{flex:1;min-width:130px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+  .stat-value{font-size:22px;font-weight:700;color:var(--header-dark);line-height:1.1;}
+  .stat-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:4px;}
+
+  /* ---------- Desktop / telas largas ---------- */
+  @media (min-width: 860px){
+    .wrap{max-width:1200px;}
+    .pin-screen{min-height:100vh;}
+    #listContainer, #clientsContainer, #clientHistoryList{
+      display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;padding:0 20px 4px;
+    }
+    .item-card, .client-card{margin:0;}
+    .dashboard-stats{flex-wrap:nowrap;}
+    #identificacaoContainer{
+      padding:0 20px;display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:0 14px;
+    }
+    .ident-card{margin:0 0 10px;}
+    #funcionariosContainer{
+      padding:0 20px;display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:0 16px;align-items:start;
+    }
+    .funcionario-card{margin:0 0 16px;}
+    .view-meta{padding:18px 20px;}
+    section{padding:24px 20px 12px;}
+  }
 
   .toast-wrap{
     position:fixed;top:0;left:0;right:0;z-index:9999;
@@ -184,13 +219,18 @@
       <button class="tab-btn" id="tabByClient">Por cliente</button>
     </div>
 
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="🔎 Buscar por nome ou empresa...">
+    </div>
+
     <div id="viewAll">
-      <div class="sub-list">Toque em um checklist para ver e editar os dados.</div>
+      <div class="sub-list">Toque em um checklist para ver os dados.</div>
       <div id="listContainer"></div>
     </div>
 
     <div id="viewClients" class="hidden">
       <div class="sub-list" id="clientsSubList">Toque em um cliente para ver o histórico de checklists dele.</div>
+      <div class="dashboard-stats" id="dashboardStats"></div>
       <div id="clientsContainer"></div>
       <div id="clientHistoryContainer" class="hidden"></div>
     </div>
@@ -273,6 +313,46 @@ let allItems = [];
 let knownIds = null; // null = ainda não carregou a 1ª vez
 let currentClient = null;
 let notifEnabled = false;
+let searchQuery = "";
+
+function normalizeText_(s){
+  return (s || "").toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function matchesSearch_(item){
+  if(!searchQuery) return true;
+  const q = normalizeText_(searchQuery);
+  const parts = [item.cliente, item.estacao, item.resumo];
+  (item.participantes || []).forEach(p => {
+    parts.push(p.nome, p.funcao, p.empresa);
+  });
+  return normalizeText_(parts.filter(Boolean).join(' ')).includes(q);
+}
+
+function getFilteredItems(){
+  return allItems.filter(matchesSearch_);
+}
+
+function applyFilterAndRender(){
+  const filtered = getFilteredItems();
+  const emptyMsg = searchQuery ? 'Nenhum resultado para essa busca.' : 'Nenhum checklist enviado ainda.';
+
+  if(!document.getElementById('viewAll').classList.contains('hidden')){
+    renderList(filtered, document.getElementById('listContainer'), emptyMsg);
+  }
+  if(!document.getElementById('viewClients').classList.contains('hidden')){
+    if(currentClient){
+      openClientHistory(encodeURIComponent(currentClient));
+    } else {
+      renderClients();
+    }
+  }
+}
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  searchQuery = e.target.value.trim();
+  applyFilterAndRender();
+});
 
 /* ---------- PIN ---------- */
 document.getElementById('pinSubmit').addEventListener('click', verifyAdminPin);
@@ -321,8 +401,8 @@ function switchTab(tab){
   document.getElementById('viewClients').classList.toggle('hidden', tab!=='clients');
   if(tab === 'clients'){
     currentClient = null;
-    renderClients();
   }
+  applyFilterAndRender();
 }
 
 /* ---------- Lista ---------- */
@@ -341,14 +421,7 @@ async function loadList(){
     if(knownIds === null){
       knownIds = new Set(allItems.map(i => i.id)); // baseline, sem popup no primeiro carregamento
     }
-    renderList(allItems, container, 'Nenhum checklist enviado ainda.');
-    if(!document.getElementById('viewClients').classList.contains('hidden')){
-      if(currentClient){
-        openClientHistory(currentClient);
-      } else {
-        renderClients();
-      }
-    }
+    applyFilterAndRender();
   }catch(err){
     container.innerHTML = '<p class="empty-msg">Erro de conexão.</p>';
   }
@@ -397,43 +470,68 @@ function escapeHtml(str){
   return div.innerHTML;
 }
 
-/* ---------- Histórico por cliente ---------- */
+/* ---------- Dashboard e histórico por cliente ---------- */
 function renderClients(){
   const container = document.getElementById('clientsContainer');
+  const statsEl = document.getElementById('dashboardStats');
   document.getElementById('clientHistoryContainer').classList.add('hidden');
   document.getElementById('clientsSubList').textContent = 'Toque em um cliente para ver o histórico de checklists dele.';
   container.classList.remove('hidden');
+  statsEl.classList.remove('hidden');
+
+  const items = getFilteredItems();
 
   if(allItems.length === 0){
+    statsEl.innerHTML = '';
     container.innerHTML = '<p class="empty-msg">Nenhum checklist enviado ainda.</p>';
+    return;
+  }
+  if(items.length === 0){
+    statsEl.innerHTML = '';
+    container.innerHTML = '<p class="empty-msg">Nenhum resultado para essa busca.</p>';
     return;
   }
 
   const grouped = {};
-  allItems.forEach(item=>{
+  items.forEach(item=>{
     const key = item.cliente || 'Sem cliente';
     if(!grouped[key]) grouped[key] = [];
     grouped[key].push(item);
   });
-
   const clientNames = Object.keys(grouped).sort((a,b)=>a.localeCompare(b, 'pt-BR'));
-  container.innerHTML = clientNames.map(name => `
+
+  // Dashboard — estatísticas gerais
+  const mostRecent = items.reduce((max, it) => new Date(it.timestamp) > new Date(max.timestamp) ? it : max, items[0]);
+  statsEl.innerHTML = `
+    <div class="stat-card"><div class="stat-value">${clientNames.length}</div><div class="stat-label">Cliente(s)</div></div>
+    <div class="stat-card"><div class="stat-value">${items.length}</div><div class="stat-label">Checklist(s)</div></div>
+    <div class="stat-card"><div class="stat-value">${formatDate(mostRecent.timestamp)}</div><div class="stat-label">Envio mais recente</div></div>
+  `;
+
+  // Cartões por cliente, com contagem e data do último envio
+  container.innerHTML = clientNames.map(name => {
+    const list = grouped[name];
+    const last = list.reduce((max, it) => new Date(it.timestamp) > new Date(max.timestamp) ? it : max, list[0]);
+    const estacoes = [...new Set(list.map(i => i.estacao).filter(Boolean))];
+    return `
     <div class="client-card" onclick="openClientHistory('${encodeURIComponent(name)}')">
       <div>
         <p class="client-name">${escapeHtml(name)}</p>
-        <p class="client-count">${grouped[name].length} checklist(s)</p>
+        <p class="client-count">${list.length} checklist(s)${estacoes.length ? ' · ' + escapeHtml(estacoes.slice(0,2).join(', ')) + (estacoes.length > 2 ? '…' : '') : ''}</p>
+        <p class="client-last">Último envio: ${formatDate(last.timestamp)}</p>
       </div>
       <div class="item-arrow">›</div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function openClientHistory(encodedName){
   const name = decodeURIComponent(encodedName);
   currentClient = name;
-  const filtered = allItems.filter(i => (i.cliente || 'Sem cliente') === name);
+  const filtered = getFilteredItems().filter(i => (i.cliente || 'Sem cliente') === name);
 
   document.getElementById('clientsContainer').classList.add('hidden');
+  document.getElementById('dashboardStats').classList.add('hidden');
   document.getElementById('clientsSubList').textContent = `Histórico de "${name}"`;
 
   const historyContainer = document.getElementById('clientHistoryContainer');
@@ -443,7 +541,7 @@ function openClientHistory(encodedName){
     currentClient = null;
     renderClients();
   });
-  renderList(filtered, document.getElementById('clientHistoryList'), 'Nenhum checklist deste cliente.');
+  renderList(filtered, document.getElementById('clientHistoryList'), searchQuery ? 'Nenhum resultado para essa busca.' : 'Nenhum checklist deste cliente.');
 }
 
 /* ---------- Som de notificação ---------- */
@@ -520,14 +618,7 @@ async function checkForNewSubmissions(){
 
   playNotificationSound();
 
-  // Atualiza as listas visíveis, se estiverem na tela
-  if(!document.getElementById('viewAll').classList.contains('hidden')){
-    renderList(allItems, document.getElementById('listContainer'), 'Nenhum checklist enviado ainda.');
-  }
-  if(!document.getElementById('viewClients').classList.contains('hidden')){
-    if(currentClient){ openClientHistory(encodeURIComponent(currentClient)); }
-    else { renderClients(); }
-  }
+  applyFilterAndRender();
 
   // Popup no app
   novos.forEach(item => {
