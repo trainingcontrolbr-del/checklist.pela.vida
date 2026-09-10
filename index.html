@@ -232,6 +232,21 @@
     margin-bottom:-34px;float:right;
   }
 
+  .warning-modal{
+    position:fixed;inset:0;z-index:10000;
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  .warning-modal-backdrop{position:absolute;inset:0;background:rgba(20,24,28,.78);}
+  .warning-modal-content{
+    position:relative;max-width:360px;width:100%;background:#fff;border-radius:16px;
+    padding:30px 26px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.35);
+  }
+  .warning-icon{font-size:42px;margin-bottom:10px;}
+  .warning-modal-content h3{margin:0 0 10px;font-size:17px;color:var(--nok);}
+  .warning-modal-content p{margin:0 0 22px;font-size:14px;color:var(--text);line-height:1.5;}
+  .warning-modal-content .btn{background:var(--nok);}
+  .warning-modal-content .btn:hover{background:#a8321f;}
+
   .has-error{border-color:var(--nok) !important; box-shadow:0 0 0 1px var(--nok);}
   .field-error-text{color:var(--nok);font-size:12px;margin:-6px 20px 14px;}
 
@@ -501,6 +516,17 @@
     </div>
   </div>
 
+  <!-- ============ MODAL DE ALERTA NOK ============ -->
+  <div class="warning-modal hidden" id="warningModal">
+    <div class="warning-modal-backdrop"></div>
+    <div class="warning-modal-content">
+      <div class="warning-icon">⚠️</div>
+      <h3>Atenção</h3>
+      <p>O checklist não poderá ser concluído, e a atividade não poderá ser iniciada até que o item seja adequado.</p>
+      <button class="btn" id="warningModalClose">Entendi</button>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -680,8 +706,23 @@ function buildFuncionarios(){
     html += `</table></div>`;
   }
   container.innerHTML = html;
+
+  // Sempre que um "NOK" for marcado, avisa que o checklist não pode ser concluído
+  container.querySelectorAll('input[type="radio"][value="NOK"]').forEach(radio=>{
+    radio.addEventListener('change', ()=>{
+      if(radio.checked) showWarningModal();
+    });
+  });
 }
 buildFuncionarios();
+
+function showWarningModal(){
+  document.getElementById('warningModal').classList.remove('hidden');
+}
+function closeWarningModal(){
+  document.getElementById('warningModal').classList.add('hidden');
+}
+document.getElementById('warningModalClose').addEventListener('click', closeWarningModal);
 
 function updateFuncEmptyState(){
   const anyVisible = document.querySelectorAll('.funcionario-card:not(.hidden)').length > 0;
