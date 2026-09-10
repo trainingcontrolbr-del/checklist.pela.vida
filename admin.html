@@ -29,10 +29,10 @@
     margin-left:calc(50% - 50vw);
     display:flex;align-items:center;justify-content:center;flex-direction:column;
     background:
-      linear-gradient(160deg, rgba(41,51,60,.6) 0%, rgba(30,38,45,.8) 100%),
+      linear-gradient(160deg, rgba(41,51,60,.55) 0%, rgba(30,38,45,.72) 100%),
       url('backgrounds/admin-bg.jpg');
     background-size:cover;
-    background-position:center;
+    background-position:68% 30%;
     background-repeat:no-repeat;
     padding:24px;
     box-sizing:border-box;
@@ -184,7 +184,11 @@
   /* ---------- Desktop / telas largas ---------- */
   @media (min-width: 860px){
     .wrap{max-width:1200px;}
-    .pin-screen{min-height:100vh;}
+    .pin-screen{
+      min-height:100vh;
+      justify-content:flex-start;
+      padding-left:8vw;
+    }
     #listContainer, #clientsContainer, #clientHistoryList{
       display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;padding:0 20px 4px;
     }
