@@ -115,6 +115,29 @@
   .icon-btn:hover{background:rgba(255,255,255,.22);}
   .icon-btn svg{width:18px;height:18px;}
   .icon-btn.active{background:#fff;color:var(--header-dark);}
+
+  .notif-wrap{position:relative;}
+  .notif-badge{
+    position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;padding:0 4px;
+    border-radius:20px;background:var(--nok);color:#fff;font-size:10px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;line-height:1;
+    border:2px solid var(--header-dark);
+  }
+  .notif-panel{
+    position:absolute;top:calc(100% + 10px);right:0;width:320px;max-width:88vw;
+    background:#fff;border:1px solid var(--border);border-radius:14px;
+    box-shadow:0 14px 34px rgba(16,24,40,.2);z-index:60;overflow:hidden;
+  }
+  .notif-panel-head{padding:14px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--text);}
+  .notif-panel-list{max-height:360px;overflow-y:auto;}
+  .notif-panel-item{display:flex;gap:10px;align-items:center;padding:12px 16px;border-top:1px solid var(--border);cursor:pointer;}
+  .notif-panel-item:first-child{border-top:none;}
+  .notif-panel-item:hover{background:var(--row-alt);}
+  .notif-panel-item .item-avatar{width:34px;height:34px;border-radius:9px;}
+  .notif-panel-item .item-avatar svg{width:15px;height:15px;}
+  .notif-panel-item .notif-item-main{flex:1;min-width:0;}
+  .notif-panel-item .notif-item-main p{margin:0;}
+  .notif-panel-empty{padding:26px 16px;text-align:center;color:var(--muted);font-size:12.5px;}
   .refresh-btn{
     display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.14);color:#fff;
     border:none;padding:0 16px;height:38px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;flex:none;
@@ -407,9 +430,16 @@
             <p class="header-sub">Acompanhe o histórico e o status dos checklists</p>
           </div>
           <div class="header-actions">
-            <button class="icon-btn" id="notifBtn" title="Ativar avisos de novo checklist">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-            </button>
+            <div class="notif-wrap">
+              <button class="icon-btn" id="notifBtn" title="Checklists recentes">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                <span class="notif-badge hidden" id="notifBadge">0</span>
+              </button>
+              <div class="notif-panel hidden" id="notifPanel">
+                <div class="notif-panel-head">Checklists recentes</div>
+                <div class="notif-panel-list" id="notifPanelList"></div>
+              </div>
+            </div>
             <button class="refresh-btn" id="refreshBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
               Atualizar
@@ -558,7 +588,6 @@ let currentId = null;
 let allItems = [];
 let knownIds = null; // null = ainda não carregou a 1ª vez
 let currentClient = null;
-let notifEnabled = false;
 let searchQuery = "";
 
 function normalizeText_(s){
@@ -667,6 +696,13 @@ async function loadList(){
     allItems = items;
     if(knownIds === null){
       knownIds = new Set(allItems.map(i => i.id)); // baseline, sem popup no primeiro carregamento
+
+      // Checklists chegados desde a última vez que o sino foi aberto (mesmo
+      // que tenha sido numa sessão/dispositivo anterior) entram como não lidos,
+      // mas sem som/toast — isso é só pra "recuperar o atraso" ao entrar de novo.
+      const lastSeen = getLastSeen_();
+      unreadItems = lastSeen ? allItems.filter(i => new Date(i.timestamp) > new Date(lastSeen)) : [];
+      updateNotifBadge();
     }
     applyFilterAndRender();
   }catch(err){
@@ -896,28 +932,82 @@ function playNotificationSound(){
   });
 }
 
-/* ---------- Popup de novo checklist ---------- */
-document.getElementById('notifBtn').addEventListener('click', toggleNotifications);
+/* ---------- Sino: badge de contagem + painel de recentes + ícone do app ---------- */
+const LAST_SEEN_KEY = 'pelavida_admin_last_seen';
+let unreadItems = [];
 
-function toggleNotifications(){
-  ensureAudioContext();
-  if(!notifEnabled){
-    if('Notification' in window && Notification.permission !== 'granted'){
-      Notification.requestPermission().then(perm=>{
-        notifEnabled = true;
-        document.getElementById('notifBtn').classList.add('active');
-        showToast('🔔', 'Avisos ativados', 'Você será avisado quando um novo checklist chegar.');
-      });
-    } else {
-      notifEnabled = true;
-      document.getElementById('notifBtn').classList.add('active');
-      showToast('🔔', 'Avisos ativados', 'Você será avisado quando um novo checklist chegar.');
-    }
+function getLastSeen_(){
+  try{ return localStorage.getItem(LAST_SEEN_KEY); }catch(e){ return null; }
+}
+function setLastSeenNow_(){
+  try{ localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString()); }catch(e){ /* ignora */ }
+}
+
+function updateNotifBadge(){
+  const badge = document.getElementById('notifBadge');
+  const count = unreadItems.length;
+  if(count > 0){
+    badge.textContent = count > 99 ? '99+' : String(count);
+    badge.classList.remove('hidden');
   } else {
-    notifEnabled = false;
-    document.getElementById('notifBtn').classList.remove('active');
+    badge.classList.add('hidden');
+  }
+  // Reflete o mesmo número no ícone do app instalado (quando suportado pelo navegador/SO)
+  if('setAppBadge' in navigator){
+    if(count > 0){ navigator.setAppBadge(count).catch(()=>{}); }
+    else { navigator.clearAppBadge().catch(()=>{}); }
   }
 }
+
+function renderNotifPanel(){
+  const list = document.getElementById('notifPanelList');
+  if(unreadItems.length === 0){
+    list.innerHTML = '<div class="notif-panel-empty">Nenhum checklist novo por aqui.</div>';
+    return;
+  }
+  const sorted = [...unreadItems].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  list.innerHTML = sorted.map((item, idx) => `
+    <div class="notif-panel-item" onclick="closeNotifPanel(); document.getElementById('listScreen').classList.add('hidden'); openSubmission('${item.id}');">
+      <div class="item-avatar" style="background:${avatarColor_(idx)}1a;color:${avatarColor_(idx)}">${ICON_USERS}</div>
+      <div class="notif-item-main">
+        <p class="item-cliente">${escapeHtml((item.cliente || 'SEM CLIENTE').toUpperCase())}${item.estacao ? ' — ' + escapeHtml(item.estacao.toUpperCase()) : ''}</p>
+        <p class="item-name" style="font-size:13px;">${escapeHtml(item.resumo)}</p>
+        <p class="item-date">${formatDate(item.timestamp)}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function closeNotifPanel(){
+  document.getElementById('notifPanel').classList.add('hidden');
+}
+
+document.getElementById('notifBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  ensureAudioContext();
+  if('Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission().catch(()=>{});
+  }
+
+  const panel = document.getElementById('notifPanel');
+  const isOpening = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden');
+
+  if(isOpening){
+    renderNotifPanel();
+    unreadItems = [];
+    setLastSeenNow_();
+    updateNotifBadge();
+  }
+});
+
+document.addEventListener('click', (e) => {
+  const wrap = document.querySelector('.notif-wrap');
+  const panel = document.getElementById('notifPanel');
+  if(wrap && !wrap.contains(e.target) && !panel.classList.contains('hidden')){
+    panel.classList.add('hidden');
+  }
+});
 
 function startPolling(){
   setInterval(checkForNewSubmissions, 20000); // a cada 20s
@@ -934,6 +1024,9 @@ async function checkForNewSubmissions(){
   allItems = items;
   novos.forEach(item => knownIds.add(item.id));
 
+  unreadItems = unreadItems.concat(novos);
+  updateNotifBadge();
+
   playNotificationSound();
 
   applyFilterAndRender();
@@ -943,7 +1036,7 @@ async function checkForNewSubmissions(){
     const sub = (item.cliente || 'Sem cliente') + (item.estacao ? ' — ' + item.estacao : '');
     showToast('📋', 'Novo checklist enviado', sub + ' · ' + item.resumo, item.id);
 
-    if(notifEnabled && 'Notification' in window && Notification.permission === 'granted'){
+    if('Notification' in window && Notification.permission === 'granted'){
       const n = new Notification('Novo checklist — Pela Vida', { body: sub + ' · ' + item.resumo });
       n.onclick = () => { window.focus(); openSubmission(item.id); };
     }
