@@ -188,6 +188,34 @@
   }
   .outros-empty-note{padding:14px 12px;font-size:12.5px;color:var(--muted);text-align:center;}
 
+  .cards-buttons{display:flex;gap:10px;padding:0 20px 20px;}
+  .card-btn{
+    flex:1;display:flex;align-items:center;gap:10px;
+    background:var(--card);border:1px solid var(--border);border-radius:10px;
+    padding:12px 10px;font-family:inherit;font-size:13px;font-weight:600;color:var(--text);
+    text-align:left;cursor:pointer;line-height:1.3;
+  }
+  .card-btn:active{background:var(--row-alt);}
+  .card-btn-icon{font-size:22px;flex:none;}
+  .card-btn small{font-weight:400;color:var(--muted);}
+
+  .card-modal{
+    position:fixed;inset:0;z-index:9999;
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  .card-modal-backdrop{position:absolute;inset:0;background:rgba(20,24,28,.75);}
+  .card-modal-content{
+    position:relative;max-width:520px;width:100%;max-height:90vh;
+    overflow:auto;background:#fff;border-radius:14px;padding:10px;
+  }
+  .card-modal-content img{width:100%;height:auto;display:block;border-radius:8px;}
+  .card-modal-close{
+    position:sticky;top:0;left:100%;transform:translateX(0);
+    width:34px;height:34px;border-radius:50%;border:none;
+    background:rgba(20,24,28,.75);color:#fff;font-size:15px;cursor:pointer;
+    margin-bottom:-34px;float:right;
+  }
+
   .has-error{border-color:var(--nok) !important; box-shadow:0 0 0 1px var(--nok);}
   .field-error-text{color:var(--nok);font-size:12px;margin:-6px 20px 14px;}
 
@@ -349,6 +377,17 @@
       </div>
     </div>
 
+    <div class="cards-buttons">
+      <button type="button" class="card-btn" id="btnCheckStatus">
+        <span class="card-btn-icon">✅</span>
+        <span>Check Status<br><small>Início Seguro</small></span>
+      </button>
+      <button type="button" class="card-btn" id="btnRegrasVida">
+        <span class="card-btn-icon">🖐️</span>
+        <span>9 Regras para Vida<br><small>e Stop Work</small></span>
+      </button>
+    </div>
+
     <section>
       <p class="section-sub">
         O <b>Checklist Pela Vida</b> tem como objetivo assegurar que todas as atividades sejam iniciadas de forma <b>segura, organizada e em conformidade</b> com os requisitos de segurança e saúde no trabalho.
@@ -435,6 +474,15 @@
     <h2>Checklist enviado!</h2>
     <p>Seu registro foi salvo com sucesso. Obrigado por cuidar da segurança de todos.</p>
     <button class="btn" id="newChecklistBtn">Novo checklist</button>
+  </div>
+
+  <!-- ============ MODAL DOS CARTÕES ============ -->
+  <div class="card-modal hidden" id="cardModal">
+    <div class="card-modal-backdrop" id="cardModalBackdrop"></div>
+    <div class="card-modal-content">
+      <button class="card-modal-close" id="cardModalClose" aria-label="Fechar">✕</button>
+      <img id="cardModalImg" src="" alt="Cartão de referência">
+    </div>
   </div>
 
 </div>
@@ -893,6 +941,25 @@ document.getElementById('newChecklistBtn').addEventListener('click', ()=>{
   document.getElementById('formScreen').classList.remove('hidden');
   window.scrollTo(0,0);
 });
+
+/* ---------- Modal dos cartões de referência ---------- */
+function openCardModal(src, alt){
+  document.getElementById('cardModalImg').src = src;
+  document.getElementById('cardModalImg').alt = alt;
+  document.getElementById('cardModal').classList.remove('hidden');
+}
+function closeCardModal(){
+  document.getElementById('cardModal').classList.add('hidden');
+  document.getElementById('cardModalImg').src = "";
+}
+document.getElementById('btnCheckStatus').addEventListener('click', ()=>{
+  openCardModal('cards/card-check-status.jpg', 'Cartão Início Seguro — Check Status');
+});
+document.getElementById('btnRegrasVida').addEventListener('click', ()=>{
+  openCardModal('cards/card-regras-vida.jpg', 'Regras para Vida da SGS e Stop Work');
+});
+document.getElementById('cardModalClose').addEventListener('click', closeCardModal);
+document.getElementById('cardModalBackdrop').addEventListener('click', closeCardModal);
 
 /* ---------- PWA: registra o service worker ---------- */
 if ('serviceWorker' in navigator) {
