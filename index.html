@@ -41,12 +41,20 @@
   /* ---------- PIN SCREEN ---------- */
   .pin-screen{
     min-height:100vh;
+    width:100vw;
+    margin-left:calc(50% - 50vw);
     display:flex;
     align-items:center;
     justify-content:center;
     flex-direction:column;
-    background:linear-gradient(160deg,var(--header) 0%,var(--header-dark) 100%);
+    background:
+      linear-gradient(160deg, rgba(41,51,60,.55) 0%, rgba(30,38,45,.72) 100%),
+      url('backgrounds/admin-bg.jpg');
+    background-size:cover;
+    background-position:60% 30%;
+    background-repeat:no-repeat;
     padding:24px;
+    box-sizing:border-box;
   }
   .pin-card{
     background:var(--card);
@@ -60,6 +68,14 @@
   .shield{width:56px;height:56px;margin:0 auto 12px;border-radius:14px;object-fit:cover;display:block;}
   .pin-card h1{font-size:19px;margin:0 0 4px;color:var(--header-dark);}
   .pin-card p{font-size:13px;color:var(--muted);margin:0 0 22px;}
+
+  /* Ajustes finos do enquadramento da foto de fundo por tamanho de tela */
+  @media (max-width: 420px){
+    .pin-screen{ background-position:55% 22%; }
+  }
+  @media (min-width: 700px){
+    .pin-screen{ background-position:65% 30%; }
+  }
   .pin-input{
     width:100%;
     font-size:26px;
