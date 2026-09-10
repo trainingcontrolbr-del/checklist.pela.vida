@@ -54,7 +54,7 @@
   .pin-error{color:var(--nok);font-size:13px;margin-top:10px;min-height:16px;}
 
   /* ============ APP SHELL (sidebar + conteúdo) ============ */
-  .app-shell{display:flex;min-height:100vh;align-items:stretch;}
+  .app-shell{display:flex;flex-direction:column;min-height:100vh;align-items:stretch;}
   .main-area{flex:1;min-width:0;}
 
   .sidebar{
@@ -86,7 +86,7 @@
   .sidebar-footer svg{width:18px;height:18px;flex:none;}
 
   .mobile-nav{
-    display:flex;gap:8px;overflow-x:auto;padding:12px 16px;
+    display:flex;align-items:center;flex:none;gap:8px;overflow-x:auto;padding:12px 16px;
     background:linear-gradient(120deg, var(--header) 0%, var(--header-dark) 100%);
   }
   .mobile-nav .nav-item{
@@ -321,6 +321,7 @@
   /* ============ DESKTOP (≥860px): sidebar fixa + grades ============ */
   @media (min-width: 860px){
     .pin-screen{ justify-content:flex-start; padding-left:8vw; }
+    .app-shell{flex-direction:row;}
     .sidebar{display:flex;}
     .mobile-nav{display:none;}
     #listContainer, #clientsContainer, #clientHistoryList{
