@@ -326,20 +326,20 @@
     display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px;pointer-events:none;
   }
   .toast{
-    pointer-events:auto;max-width:460px;width:100%;background:var(--header-dark);color:#fff;
-    border-radius:14px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.3);
+    pointer-events:auto;max-width:460px;width:100%;background:#f5b52c;color:#3c2a06;
+    border-radius:14px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.25);
     display:flex;align-items:center;gap:12px;
     animation:toast-in .25s ease;
   }
   @keyframes toast-in{ from{ transform:translateY(-16px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
   .toast .toast-icon{font-size:22px;flex:none;}
   .toast .toast-body{flex:1;}
-  .toast .toast-title{font-size:13.5px;font-weight:700;margin:0;}
-  .toast .toast-sub{font-size:12px;color:#cfd6da;margin:2px 0 0;}
+  .toast .toast-title{font-size:13.5px;font-weight:700;margin:0;color:#3c2a06;}
+  .toast .toast-sub{font-size:12px;color:#6b4d0a;margin:2px 0 0;}
   .toast .toast-actions{display:flex;gap:8px;flex:none;}
   .toast button{border:none;border-radius:7px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;}
-  .toast .toast-view{background:var(--accent-dark);color:#fff;}
-  .toast .toast-dismiss{background:rgba(255,255,255,.15);color:#fff;}
+  .toast .toast-view{background:#3c2a06;color:#fff;}
+  .toast .toast-dismiss{background:rgba(60,42,6,.12);color:#3c2a06;}
 
   /* ============ DESKTOP (≥860px): sidebar fixa + grades ============ */
   @media (min-width: 860px){
