@@ -23,8 +23,20 @@
   body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);}
   .wrap{max-width:680px;margin:0 auto;min-height:100vh;background:var(--bg);}
 
-  .pin-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;
-    background:linear-gradient(160deg,var(--header) 0%,var(--header-dark) 100%);padding:24px;}
+  .pin-screen{
+    min-height:100vh;
+    width:100vw;
+    margin-left:calc(50% - 50vw);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    background:
+      linear-gradient(160deg, rgba(41,51,60,.6) 0%, rgba(30,38,45,.8) 100%),
+      url('backgrounds/admin-bg.jpg');
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    padding:24px;
+    box-sizing:border-box;
+  }
   .pin-card{background:var(--card);border-radius:14px;padding:36px 28px;max-width:340px;width:100%;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.25);}
   .shield{width:56px;height:56px;margin:0 auto 12px;border-radius:14px;object-fit:cover;display:block;}
   .pin-card h1{font-size:19px;margin:0 0 4px;color:var(--header-dark);}
