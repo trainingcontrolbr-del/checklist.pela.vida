@@ -6,7 +6,7 @@
 <title>Checklist Pela Vida — Admin</title>
 
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0165DB">
+<meta name="theme-color" content="#0d2b6b">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -15,14 +15,18 @@
 <meta name="apple-mobile-web-app-title" content="Pela Vida Admin">
 <style>
   :root{
-    --header:#4f5b66; --header-dark:#3c4650; --bg:#eef0f3; --card:#ffffff;
-    --row-alt:#f5f6f8; --accent:#f2a52c; --accent-dark:#d88f1a; --teal:#1f6f78;
-    --text:#2c333a; --muted:#6b7580; --border:#dfe3e8; --ok:#2e8b57; --nok:#c0392b;
+    --header:#0d2f7a; --header-dark:#081c4d; --bg:#eef1f5; --card:#ffffff;
+    --row-alt:#f5f7fa; --accent:#f2a52c; --accent-dark:#d88f1a;
+    --primary:#2f6fed; --primary-dark:#1c4fd1; --primary-light:#eaf1ff;
+    --teal:#2f6fed; /* mantido por compatibilidade com estilos existentes */
+    --text:#1f2733; --muted:#6b7580; --border:#e1e5eb; --ok:#16a34a; --nok:#dc2626;
   }
   *{box-sizing:border-box;}
   body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);}
-  .wrap{max-width:680px;margin:0 auto;min-height:100vh;background:var(--bg);}
+  .wrap{min-height:100vh;background:var(--bg);}
+  .hidden{display:none !important;}
 
+  /* ============ TELA DE PIN ============ */
   .pin-screen{
     min-height:100vh;
     width:100vw;
@@ -37,61 +41,223 @@
     padding:24px;
     box-sizing:border-box;
   }
-  .pin-card{background:var(--card);border-radius:14px;padding:36px 28px;max-width:340px;width:100%;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.25);}
+  .pin-card{background:var(--card);border-radius:16px;padding:36px 28px;max-width:340px;width:100%;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.25);}
   .shield{width:56px;height:56px;margin:0 auto 12px;border-radius:14px;object-fit:cover;display:block;}
   .pin-card h1{font-size:19px;margin:0 0 4px;color:var(--header-dark);}
   .pin-card p{font-size:13px;color:var(--muted);margin:0 0 22px;}
   .pin-input{width:100%;font-size:26px;letter-spacing:10px;text-align:center;padding:12px;border:2px solid var(--border);border-radius:10px;outline:none;margin-bottom:14px;}
-  .pin-input:focus{border-color:var(--teal);}
-  .btn{width:100%;background:var(--teal);color:#fff;border:none;padding:13px;font-size:15px;font-weight:600;border-radius:10px;cursor:pointer;}
+  .pin-input:focus{border-color:var(--primary);}
+  .btn{width:100%;background:var(--primary);color:#fff;border:none;padding:13px;font-size:15px;font-weight:600;border-radius:10px;cursor:pointer;}
+  .btn:hover{background:var(--primary-dark);}
   .btn:disabled{opacity:.6;cursor:default;}
-  .btn-outline{background:#fff;color:var(--teal);border:1.5px solid var(--teal);}
+  .btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--primary);}
   .pin-error{color:var(--nok);font-size:13px;margin-top:10px;min-height:16px;}
 
-  .header{background:var(--header);color:#fff;padding:18px 20px;display:flex;align-items:center;gap:14px;}
-  .header .shield{width:34px;height:34px;flex:none;margin:0;border-radius:8px;object-fit:cover;}
-  .header h1{font-size:18px;margin:0;font-weight:700;flex:1;}
-  .header button{background:rgba(255,255,255,.15);color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12.5px;cursor:pointer;}
+  /* ============ APP SHELL (sidebar + conteúdo) ============ */
+  .app-shell{display:flex;min-height:100vh;align-items:stretch;}
+  .main-area{flex:1;min-width:0;}
+
+  .sidebar{
+    display:none;
+    width:236px;flex:none;color:#fff;flex-direction:column;padding:22px 14px;
+    background:linear-gradient(180deg, var(--header) 0%, var(--header-dark) 100%);
+  }
+  .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 8px 24px;}
+  .sidebar-brand img{width:36px;height:36px;border-radius:9px;flex:none;}
+  .sidebar-brand .brand-text{font-size:15px;font-weight:700;line-height:1.2;}
+  .sidebar-brand .brand-text small{display:block;font-weight:400;font-size:11px;opacity:.75;}
+  .sidebar-nav{display:flex;flex-direction:column;gap:3px;flex:1;}
+  .nav-item{
+    display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;
+    color:rgba(255,255,255,.78);font-size:13.5px;font-weight:500;text-decoration:none;cursor:pointer;
+    border:none;background:none;width:100%;text-align:left;font-family:inherit;
+  }
+  .nav-item svg{width:18px;height:18px;flex:none;opacity:.9;}
+  .nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+  .nav-item.active{background:var(--primary);color:#fff;font-weight:700;}
+  .nav-item.active:hover{background:var(--primary);}
+  .nav-item.disabled{opacity:.42;cursor:not-allowed;}
+  .nav-item.disabled:hover{background:none;color:rgba(255,255,255,.78);}
+  .nav-tag{margin-left:auto;font-size:8.5px;font-weight:700;letter-spacing:.3px;background:rgba(255,255,255,.16);padding:2px 6px;border-radius:20px;flex:none;}
+  .sidebar-footer{
+    display:flex;align-items:center;gap:9px;font-size:11px;color:rgba(255,255,255,.7);
+    border-top:1px solid rgba(255,255,255,.14);padding-top:16px;margin-top:12px;line-height:1.3;
+  }
+  .sidebar-footer svg{width:18px;height:18px;flex:none;}
+
+  .mobile-nav{
+    display:flex;gap:8px;overflow-x:auto;padding:12px 16px;
+    background:linear-gradient(120deg, var(--header) 0%, var(--header-dark) 100%);
+  }
+  .mobile-nav .nav-item{
+    flex:none;white-space:nowrap;color:rgba(255,255,255,.85);padding:8px 13px;border-radius:20px;
+    background:rgba(255,255,255,.1);font-size:12.5px;
+  }
+  .mobile-nav .nav-item svg{width:14px;height:14px;}
+  .mobile-nav .nav-item.active{background:#fff;color:var(--header-dark);}
+  .mobile-nav .nav-item.disabled{opacity:.45;}
+  .mobile-nav .nav-tag{display:none;}
+
+  /* ============ CABEÇALHO ============ */
+  .header{
+    background:linear-gradient(120deg, var(--header) 0%, var(--header-dark) 100%);
+    color:#fff;padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  }
+  .header .shield{width:40px;height:40px;flex:none;margin:0;border-radius:10px;object-fit:cover;}
+  .header-titles{flex:1;min-width:180px;}
+  .header h1{font-size:19px;margin:0;font-weight:700;line-height:1.25;}
+  .header-sub{font-size:12.5px;color:rgba(255,255,255,.78);margin:3px 0 0;}
+  .header-actions{display:flex;align-items:center;gap:10px;flex:none;margin-left:auto;}
+  .icon-btn{
+    position:relative;width:38px;height:38px;border-radius:10px;border:none;flex:none;
+    background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,.22);}
+  .icon-btn svg{width:18px;height:18px;}
+  .icon-btn.active{background:#fff;color:var(--header-dark);}
+  .refresh-btn{
+    display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.14);color:#fff;
+    border:none;padding:0 16px;height:38px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;flex:none;
+  }
+  .refresh-btn:hover{background:rgba(255,255,255,.22);}
+  .refresh-btn svg{width:15px;height:15px;}
+  .back-btn{width:38px;height:38px;flex:none;}
+  .back-btn svg{width:19px;height:19px;}
 
   section{padding:20px;}
-  .hidden{display:none !important;}
 
-  .sub-list{padding:6px 20px 20px;color:var(--muted);font-size:13px;}
-  #listContainer, #clientsContainer, #clientHistoryList{padding:0 20px 4px;}
-  .item-card{
-    background:var(--card);border:1px solid var(--border);border-radius:10px;
-    margin:0 0 12px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;
+  /* ============ FILTROS ============ */
+  .filters-card{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    margin:20px 20px 0;padding:16px;box-shadow:0 1px 3px rgba(16,24,40,.05);
   }
-  .item-card:hover{border-color:var(--teal);}
-  .item-main p{margin:0;}
-  .item-name{font-size:14.5px;font-weight:600;}
-  .item-date{font-size:12px;color:var(--muted);margin-top:2px !important;}
-  .item-arrow{color:var(--muted);font-size:18px;}
+  .tabs{display:flex;gap:8px;}
+  .tab-btn{
+    flex:1;background:var(--row-alt);border:1px solid transparent;color:var(--muted);
+    padding:11px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:7px;
+  }
+  .tab-btn svg{width:15px;height:15px;}
+  .tab-btn:hover{background:#eceff3;}
+  .tab-btn.active{background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(47,111,237,.28);}
+  .tab-btn.active:hover{background:var(--primary);}
+  .search-row{display:flex;gap:10px;margin-top:12px;}
+  .search-wrap{flex:1;position:relative;}
+  .search-wrap .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted);pointer-events:none;}
+  .search-wrap input{
+    width:100%;border:1px solid var(--border);border-radius:10px;padding:11px 12px 11px 36px;font-size:13.5px;
+    font-family:inherit;background:#fff;
+  }
+  .search-wrap input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(47,111,237,.12);}
+  .filter-btn{
+    flex:none;width:42px;height:42px;border-radius:10px;border:1px solid var(--border);background:var(--row-alt);
+    display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;
+  }
+  .filter-btn:hover{background:#eceff3;color:var(--primary);}
+  .filter-btn svg{width:16px;height:16px;}
+
+  .sub-list{padding:12px 20px 4px;color:var(--muted);font-size:12.5px;display:flex;align-items:center;gap:6px;}
+  .sub-list svg{width:14px;height:14px;flex:none;color:var(--primary);}
+
+  #listContainer, #clientsContainer, #clientHistoryList{padding:8px 20px 4px;}
+
+  /* ============ CARTÕES DE CHECKLIST / CLIENTE ============ */
+  .item-card, .client-card{
+    background:var(--card);border:1px solid var(--border);border-radius:14px;
+    margin:0 0 12px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);transition:box-shadow .15s ease, border-color .15s ease;
+  }
+  .item-card:hover, .client-card:hover{border-color:var(--primary);box-shadow:0 6px 16px rgba(16,24,40,.08);}
+  .item-avatar, .client-avatar{
+    width:42px;height:42px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;
+  }
+  .item-avatar svg, .client-avatar svg{width:19px;height:19px;}
+  .item-main, .client-info{flex:1;min-width:0;}
+  .item-main p, .client-info p{margin:0;}
+  .item-cliente{font-size:10.5px;color:var(--primary);font-weight:700;letter-spacing:.4px;margin-bottom:3px !important;}
+  .item-name, .client-name{font-size:14.5px;font-weight:700;color:var(--text);}
+  .item-date, .client-last{font-size:11.5px;color:var(--muted);margin-top:3px !important;}
+  .client-count{font-size:12px;color:var(--muted);margin:3px 0 0 !important;}
+  .item-arrow{color:var(--border);font-size:22px;flex:none;line-height:1;}
   .empty-msg{text-align:center;color:var(--muted);font-size:13.5px;padding:40px 20px;}
 
+  .client-back{
+    margin:8px 20px 12px;background:none;border:none;color:var(--primary);font-size:13.5px;
+    font-weight:600;cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:5px;
+  }
+  .client-back svg{width:15px;height:15px;}
+
+  /* ============ CARTÕES DE ESTATÍSTICA (DASHBOARD) ============ */
+  .dashboard-stats{display:flex;gap:14px;padding:20px 20px 4px;flex-wrap:wrap;}
+  .stat-card{
+    flex:1;min-width:190px;background:var(--card);border:1px solid var(--border);
+    border-left:4px solid var(--primary);border-radius:14px;padding:16px 18px;
+    display:flex;align-items:center;gap:14px;box-shadow:0 1px 2px rgba(16,24,40,.04);
+  }
+  .stat-card.stat-green{border-left-color:var(--ok);}
+  .stat-card.stat-purple{border-left-color:#7c3aed;}
+  .stat-icon{
+    width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:none;
+    background:var(--primary-light);color:var(--primary);
+  }
+  .stat-card.stat-green .stat-icon{background:#e7f7ee;color:var(--ok);}
+  .stat-card.stat-purple .stat-icon{background:#f1eafe;color:#7c3aed;}
+  .stat-icon svg{width:20px;height:20px;}
+  .stat-body{flex:1;min-width:0;}
+  .stat-value{font-size:21px;font-weight:800;color:var(--text);line-height:1.2;}
+  .stat-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-top:3px;}
+
+  /* ============ PAINÉIS DE RANKING ============ */
+  .dashboard-charts{display:flex;gap:14px;padding:16px 20px 6px;flex-wrap:wrap;align-items:flex-start;}
+  .chart-card{
+    flex:1;min-width:260px;background:var(--card);border:1px solid var(--border);
+    border-radius:14px;padding:18px;box-shadow:0 1px 2px rgba(16,24,40,.04);
+  }
+  .chart-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .chart-title{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:var(--text);margin:0;}
+  .chart-title-icon{width:27px;height:27px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none;}
+  .chart-title-icon svg{width:14px;height:14px;}
+  .chart-card.chart-clientes .chart-title-icon{background:var(--primary-light);color:var(--primary);}
+  .chart-card.chart-funcionarios .chart-title-icon{background:#fff2e0;color:var(--accent-dark);}
+  .chart-card.chart-empresas .chart-title-icon{background:#f1eafe;color:#7c3aed;}
+  .chart-viewall{background:none;border:none;color:var(--primary);font-size:11.5px;font-weight:700;cursor:pointer;padding:2px 4px;flex:none;}
+  .chart-viewall:hover{text-decoration:underline;}
+  .chart-divider{border:none;border-top:1px solid var(--border);margin:12px 0 14px;}
+  .chart-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .chart-row:last-child{margin-bottom:0;}
+  .chart-row.hidden{display:none;}
+  .chart-avatar{
+    width:26px;height:26px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:9.5px;font-weight:700;letter-spacing:.2px;
+  }
+  .chart-label{font-size:12.5px;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;}
+  .chart-bar-track{flex:1.3;background:var(--row-alt);border-radius:6px;height:7px;overflow:hidden;}
+  .chart-bar-fill{height:100%;border-radius:6px;transition:width .3s ease;}
+  .chart-card.chart-clientes .chart-bar-fill{background:var(--primary);}
+  .chart-card.chart-funcionarios .chart-bar-fill{background:var(--accent-dark);}
+  .chart-card.chart-empresas .chart-bar-fill{background:#7c3aed;}
+  .chart-count{font-size:12px;color:var(--text);font-weight:700;width:20px;text-align:right;flex:none;}
+  .chart-empty{font-size:12px;color:var(--muted);text-align:center;padding:10px 0;margin:0;}
+
+  /* ============ TELA DE VISUALIZAÇÃO ============ */
   .section-title{display:flex;align-items:baseline;gap:8px;margin:0 0 6px;font-size:16px;font-weight:700;color:var(--header-dark);}
   .section-sub{font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.5;}
 
-  textarea, input[type=text]{
-    width:100%;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:14px;
-    font-family:inherit;resize:vertical;background:#fff;
-  }
-  textarea:focus, input[type=text]:focus{outline:none;border-color:var(--teal);}
-
   .ident-card{
     display:flex;gap:10px;align-items:flex-start;background:var(--card);
-    border:1px solid var(--border);border-radius:10px;padding:12px;margin:0 20px 10px;
+    border:1px solid var(--border);border-radius:12px;padding:12px;margin:0 20px 10px;
   }
-  .ident-num{width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;
+  .ident-num{width:26px;height:26px;border-radius:50%;background:var(--primary);color:#fff;
     display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;flex:none;margin-top:2px;}
   .ident-fields{flex:1;display:flex;flex-direction:column;gap:2px;}
   .ident-value{font-size:14px;color:var(--text);}
   .ident-value.empty{color:var(--muted);font-style:italic;}
   .ident-sub{font-size:12px;color:var(--muted);}
 
-  .funcionario-card{background:var(--card);border:1px solid var(--border);border-radius:10px;margin:0 20px 16px;overflow:hidden;}
+  .funcionario-card{background:var(--card);border:1px solid var(--border);border-radius:12px;margin:0 20px 16px;overflow:hidden;}
   .funcionario-title{background:var(--row-alt);padding:12px 14px;font-size:14px;font-weight:700;color:var(--header-dark);}
   .funcionario-title small{display:block;font-weight:400;color:var(--muted);font-size:11.5px;margin-top:2px;}
+  .func-name{font-weight:400;color:var(--muted);}
   .epi-list{width:100%;}
   .epi-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-top:1px solid var(--border);}
   .epi-row:nth-child(even){background:var(--row-alt);}
@@ -106,7 +272,7 @@
   .epi-outros-text .epi-value{color:var(--muted);}
 
   .view-meta{
-    display:flex;gap:10px;padding:14px 20px;background:var(--row-alt);
+    display:flex;gap:10px;padding:16px 20px;background:var(--row-alt);
     border-bottom:1px solid var(--border);flex-wrap:wrap;
   }
   .view-meta-field{flex:1;min-width:120px;}
@@ -116,7 +282,8 @@
   .view-text.empty{color:var(--muted);font-style:italic;}
 
   .fotos-list{margin:0 20px 16px;}
-  .fotos-list a{display:block;font-size:13px;color:var(--teal);padding:6px 0;}
+  .fotos-list a{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--primary);padding:8px 0;font-weight:600;}
+  .fotos-list a svg{width:15px;height:15px;}
 
   .submit-wrap{padding:10px 20px 40px;display:flex;gap:10px;}
   .submit-wrap .btn{flex:1;}
@@ -124,73 +291,40 @@
   .status-msg.ok{color:var(--ok);}
   .status-msg.err{color:var(--nok);}
 
-  .header button{background:rgba(255,255,255,.15);color:#fff;border:none;padding:8px 10px;border-radius:8px;font-size:12.5px;cursor:pointer;flex:none;}
-  .header button.active{background:#fff;color:var(--header-dark);}
-
-  .tabs{display:flex;gap:8px;padding:14px 20px 0;}
-  .tab-btn{
-    flex:1;background:var(--card);border:1px solid var(--border);color:var(--muted);
-    padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
+  textarea, input[type=text]{
+    width:100%;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:14px;
+    font-family:inherit;resize:vertical;background:#fff;
   }
-  .tab-btn.active{background:var(--teal);border-color:var(--teal);color:#fff;}
+  textarea:focus, input[type=text]:focus{outline:none;border-color:var(--primary);}
 
-  .item-cliente{font-size:11px;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px !important;}
-
-  .client-card{
-    background:var(--card);border:1px solid var(--border);border-radius:10px;
-    margin:0 0 12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;
+  /* ============ POPUP / TOAST ============ */
+  .toast-wrap{
+    position:fixed;top:0;left:0;right:0;z-index:9999;
+    display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px;pointer-events:none;
   }
-  .client-card:hover{border-color:var(--teal);}
-  .client-name{font-size:14.5px;font-weight:700;margin:0;}
-  .client-count{font-size:12px;color:var(--muted);margin:2px 0 0 !important;}
-  .client-last{font-size:11.5px;color:var(--muted);margin:2px 0 0 !important;}
-  .client-back{margin:0 20px 12px;background:none;border:none;color:var(--teal);font-size:13.5px;font-weight:600;cursor:pointer;padding:4px 0;}
-
-  .search-wrap{padding:12px 20px 0;}
-  .search-wrap input{
-    width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;
-    font-size:13.5px;font-family:inherit;background:#fff;
+  .toast{
+    pointer-events:auto;max-width:460px;width:100%;background:var(--header-dark);color:#fff;
+    border-radius:14px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.3);
+    display:flex;align-items:center;gap:12px;
+    animation:toast-in .25s ease;
   }
-  .search-wrap input:focus{outline:none;border-color:var(--teal);}
+  @keyframes toast-in{ from{ transform:translateY(-16px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+  .toast .toast-icon{font-size:22px;flex:none;}
+  .toast .toast-body{flex:1;}
+  .toast .toast-title{font-size:13.5px;font-weight:700;margin:0;}
+  .toast .toast-sub{font-size:12px;color:#cfd6da;margin:2px 0 0;}
+  .toast .toast-actions{display:flex;gap:8px;flex:none;}
+  .toast button{border:none;border-radius:7px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;}
+  .toast .toast-view{background:var(--accent-dark);color:#fff;}
+  .toast .toast-dismiss{background:rgba(255,255,255,.15);color:#fff;}
 
-  .dashboard-stats{display:flex;gap:10px;padding:16px 20px 4px;flex-wrap:wrap;}
-  .stat-card{flex:1;min-width:130px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
-  .stat-value{font-size:22px;font-weight:700;color:var(--header-dark);line-height:1.1;}
-  .stat-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:4px;}
-
-  .dashboard-charts{display:flex;gap:12px;padding:14px 20px 6px;flex-wrap:wrap;}
-  .chart-card{
-    flex:1;min-width:240px;background:var(--card);border:1px solid var(--border);
-    border-radius:10px;padding:16px;
-  }
-  .chart-title{
-    display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;
-    color:var(--header-dark);margin:0 0 14px;text-transform:uppercase;letter-spacing:.3px;
-  }
-  .chart-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
-  .chart-row:last-child{margin-bottom:0;}
-  .chart-label{
-    font-size:12px;color:var(--text);width:92px;flex:none;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  }
-  .chart-bar-track{flex:1;background:var(--row-alt);border-radius:6px;height:11px;overflow:hidden;}
-  .chart-bar-fill{height:100%;border-radius:6px;transition:width .3s ease;}
-  .chart-card.chart-clientes .chart-bar-fill{background:linear-gradient(90deg, var(--teal), #58b6ae);}
-  .chart-card.chart-funcionarios .chart-bar-fill{background:linear-gradient(90deg, var(--accent-dark), var(--accent));}
-  .chart-card.chart-empresas .chart-bar-fill{background:linear-gradient(90deg, #4a5fc1, #7c92e8);}
-  .chart-count{font-size:11.5px;color:var(--muted);font-weight:700;width:20px;text-align:right;flex:none;}
-  .chart-empty{font-size:12px;color:var(--muted);text-align:center;padding:10px 0;margin:0;}
-
-  /* ---------- Desktop / telas largas ---------- */
+  /* ============ DESKTOP (≥860px): sidebar fixa + grades ============ */
   @media (min-width: 860px){
-    .wrap{max-width:1200px;}
-    .pin-screen{
-      min-height:100vh;
-      justify-content:flex-start;
-      padding-left:8vw;
-    }
+    .pin-screen{ justify-content:flex-start; padding-left:8vw; }
+    .sidebar{display:flex;}
+    .mobile-nav{display:none;}
     #listContainer, #clientsContainer, #clientHistoryList{
-      display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;padding:0 20px 4px;
+      display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;padding:8px 20px 4px;
     }
     .item-card, .client-card{margin:0;}
     .dashboard-stats{flex-wrap:nowrap;}
@@ -206,26 +340,6 @@
     .view-meta{padding:18px 20px;}
     section{padding:24px 20px 12px;}
   }
-
-  .toast-wrap{
-    position:fixed;top:0;left:0;right:0;z-index:9999;
-    display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px;pointer-events:none;
-  }
-  .toast{
-    pointer-events:auto;max-width:460px;width:100%;background:var(--header-dark);color:#fff;
-    border-radius:12px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.3);
-    display:flex;align-items:center;gap:12px;
-    animation:toast-in .25s ease;
-  }
-  @keyframes toast-in{ from{ transform:translateY(-16px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
-  .toast .toast-icon{font-size:22px;flex:none;}
-  .toast .toast-body{flex:1;}
-  .toast .toast-title{font-size:13.5px;font-weight:700;margin:0;}
-  .toast .toast-sub{font-size:12px;color:#cfd6da;margin:2px 0 0;}
-  .toast .toast-actions{display:flex;gap:8px;flex:none;}
-  .toast button{border:none;border-radius:7px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;}
-  .toast .toast-view{background:var(--accent-dark);color:#fff;}
-  .toast .toast-dismiss{background:rgba(255,255,255,.15);color:#fff;}
 </style>
 </head>
 <body>
@@ -246,89 +360,188 @@
     </div>
   </div>
 
-  <!-- ============ LIST SCREEN ============ -->
-  <div id="listScreen" class="hidden">
-    <div class="header">
-      <img class="shield" src="icons/icon-192.png" alt="Checklist Pela Vida">
-      <h1>Checklists enviados</h1>
-      <button id="notifBtn" title="Ativar avisos de novo checklist">🔔</button>
-      <button id="refreshBtn">Atualizar</button>
-    </div>
-    <div class="tabs">
-      <button class="tab-btn active" id="tabAll">Recentes</button>
-      <button class="tab-btn" id="tabByClient">Por cliente</button>
-    </div>
+  <!-- ============ APP SHELL ============ -->
+  <div class="app-shell hidden" id="appShell">
 
-    <div class="search-wrap">
-      <input type="text" id="searchInput" placeholder="🔎 Buscar por nome ou empresa...">
-    </div>
-
-    <div id="viewAll">
-      <div class="sub-list">Toque em um checklist para ver os dados.</div>
-      <div id="listContainer"></div>
-    </div>
-
-    <div id="viewClients" class="hidden">
-      <div class="sub-list" id="clientsSubList">Toque em um cliente para ver o histórico de checklists dele.</div>
-      <div class="dashboard-stats" id="dashboardStats"></div>
-      <div class="dashboard-charts" id="dashboardCharts"></div>
-      <div id="clientsContainer"></div>
-      <div id="clientHistoryContainer" class="hidden"></div>
-    </div>
-  </div>
-
-  <!-- ============ VIEW SCREEN (somente leitura) ============ -->
-  <div id="viewScreen" class="hidden">
-    <div class="header">
-      <button id="backBtn">← Voltar</button>
-      <h1>Ver checklist</h1>
-    </div>
-
-    <div class="view-meta">
-      <div class="view-meta-field">
-        <label>Cliente</label>
-        <p id="viewCliente">—</p>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img src="icons/icon-192.png" alt="Checklist Pela Vida">
+        <div class="brand-text">Checklist<small>pela Vida</small></div>
       </div>
-      <div class="view-meta-field">
-        <label>Estação</label>
-        <p id="viewEstacao">—</p>
+      <nav class="sidebar-nav">
+        <button type="button" class="nav-item disabled" title="Em breve">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Início<span class="nav-tag">EM BREVE</span>
+        </button>
+        <button type="button" class="nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
+          Checklists enviados
+        </button>
+        <button type="button" class="nav-item" onclick="switchTab('clients')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Clientes
+        </button>
+        <button type="button" class="nav-item disabled" title="Em breve">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+          Relatórios<span class="nav-tag">EM BREVE</span>
+        </button>
+        <button type="button" class="nav-item disabled" title="Em breve">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Configurações<span class="nav-tag">EM BREVE</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Mais segurança, menos riscos.
       </div>
-      <div class="view-meta-field">
-        <label>Enviado em</label>
-        <p id="viewTimestamp">—</p>
+    </aside>
+
+    <nav class="mobile-nav">
+      <button type="button" class="nav-item disabled" title="Em breve">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Início
+      </button>
+      <button type="button" class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
+        Checklists
+      </button>
+      <button type="button" class="nav-item" onclick="switchTab('clients')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Clientes
+      </button>
+      <button type="button" class="nav-item disabled" title="Em breve">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+        Relatórios
+      </button>
+      <button type="button" class="nav-item disabled" title="Em breve">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82"/></svg>
+        Config.
+      </button>
+    </nav>
+
+    <div class="main-area">
+
+      <!-- ============ LIST SCREEN ============ -->
+      <div id="listScreen" class="hidden">
+        <div class="header">
+          <img class="shield" src="icons/icon-192.png" alt="Checklist Pela Vida">
+          <div class="header-titles">
+            <h1>Checklists enviados</h1>
+            <p class="header-sub">Acompanhe o histórico e o status dos checklists dos seus clientes.</p>
+          </div>
+          <div class="header-actions">
+            <button class="icon-btn" id="notifBtn" title="Ativar avisos de novo checklist">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </button>
+            <button class="refresh-btn" id="refreshBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Atualizar
+            </button>
+          </div>
+        </div>
+
+        <div class="filters-card">
+          <div class="tabs">
+            <button class="tab-btn active" id="tabAll">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+              Recentes
+            </button>
+            <button class="tab-btn" id="tabByClient">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Por cliente
+            </button>
+          </div>
+          <div class="search-row">
+            <div class="search-wrap">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="searchInput" placeholder="Buscar por nome ou empresa...">
+            </div>
+            <button type="button" class="filter-btn" title="Focar na busca" onclick="document.getElementById('searchInput').focus()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="viewAll">
+          <div class="sub-list">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            Toque em um checklist para ver os dados.
+          </div>
+          <div id="listContainer"></div>
+        </div>
+
+        <div id="viewClients" class="hidden">
+          <div class="sub-list" id="clientsSubList">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            Toque em um cliente para ver o histórico de checklists dele.
+          </div>
+          <div class="dashboard-stats" id="dashboardStats"></div>
+          <div class="dashboard-charts" id="dashboardCharts"></div>
+          <div id="clientsContainer"></div>
+          <div id="clientHistoryContainer" class="hidden"></div>
+        </div>
       </div>
+
+      <!-- ============ VIEW SCREEN (somente leitura) ============ -->
+      <div id="viewScreen" class="hidden">
+        <div class="header">
+          <button class="icon-btn back-btn" id="backBtn" title="Voltar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          </button>
+          <div class="header-titles">
+            <h1>Ver checklist</h1>
+            <p class="header-sub">Detalhes completos do registro selecionado.</p>
+          </div>
+        </div>
+
+        <div class="view-meta">
+          <div class="view-meta-field">
+            <label>Cliente</label>
+            <p id="viewCliente">—</p>
+          </div>
+          <div class="view-meta-field">
+            <label>Estação</label>
+            <p id="viewEstacao">—</p>
+          </div>
+          <div class="view-meta-field">
+            <label>Enviado em</label>
+            <p id="viewTimestamp">—</p>
+          </div>
+        </div>
+
+        <section>
+          <p class="section-title">1. APR</p>
+          <p class="section-sub">Fotos enviadas com este checklist. Toque para abrir e baixar.</p>
+        </section>
+        <div class="fotos-list" id="fotosList"></div>
+
+        <section>
+          <p class="section-title">2. Identificação</p>
+        </section>
+        <div id="identificacaoContainer"></div>
+
+        <section>
+          <p class="section-title">3. EPIs e Documentos</p>
+        </section>
+        <div id="funcionariosContainer"></div>
+
+        <section>
+          <p class="section-title">4. Outros <span style="font-weight:400;font-size:12px;color:var(--muted);">(aspectos físicos e psicológicos)</span></p>
+          <p class="view-text" id="viewOutros">—</p>
+        </section>
+
+        <section>
+          <p class="section-title">5. Observação</p>
+          <p class="view-text" id="viewObservacao">—</p>
+        </section>
+
+        <div class="submit-wrap">
+          <button class="btn" id="backBtn2">← Voltar para a lista</button>
+        </div>
+        <div class="status-msg" id="viewStatus" style="padding:0 20px 30px;"></div>
+      </div>
+
     </div>
-
-    <section>
-      <p class="section-title">1. APR</p>
-      <p class="section-sub">Fotos enviadas com este checklist. Toque para abrir e baixar.</p>
-    </section>
-    <div class="fotos-list" id="fotosList"></div>
-
-    <section>
-      <p class="section-title">2. Identificação</p>
-    </section>
-    <div id="identificacaoContainer"></div>
-
-    <section>
-      <p class="section-title">3. EPIs e Documentos</p>
-    </section>
-    <div id="funcionariosContainer"></div>
-
-    <section>
-      <p class="section-title">4. Outros <span style="font-weight:400;font-size:12px;color:var(--muted);">(aspectos físicos e psicológicos)</span></p>
-      <p class="view-text" id="viewOutros">—</p>
-    </section>
-
-    <section>
-      <p class="section-title">5. Observação</p>
-      <p class="view-text" id="viewObservacao">—</p>
-    </section>
-
-    <div class="submit-wrap">
-      <button class="btn" id="backBtn2">← Voltar para a lista</button>
-    </div>
-    <div class="status-msg" id="viewStatus" style="padding:0 20px 30px;"></div>
   </div>
 
 </div>
@@ -347,6 +560,21 @@ const EPI_ITEMS = [
   { key: "apr_art", label: "Assinou a APR / ART?" },
   { key: "treinamentos", label: "Treinamentos realizados (Integração, ART)" }
 ];
+
+const ICON_BUILDING = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><path d="M9 22v-4h6v4"/><path d="M9 6h.01M15 6h.01M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></svg>';
+const ICON_USERS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m9 12 2 2 4-4"/></svg>';
+const ICON_CALENDAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+const ICON_CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+const AVATAR_COLORS = ['#2f6fed', '#16a34a', '#7c3aed', '#0891b2', '#db2777', '#ea580c', '#4f46e5', '#0d9488'];
+
+function initials_(name){
+  const parts = (name || '').trim().split(/\s+/).filter(Boolean);
+  if(parts.length === 0) return '?';
+  if(parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+function avatarColor_(i){ return AVATAR_COLORS[i % AVATAR_COLORS.length]; }
 
 let adminPin = "";
 let currentId = null;
@@ -419,6 +647,7 @@ async function verifyAdminPin(){
     if(data.ok){
       adminPin = pin;
       document.getElementById('pinScreen').classList.add('hidden');
+      document.getElementById('appShell').classList.remove('hidden');
       document.getElementById('listScreen').classList.remove('hidden');
       loadList();
       startPolling();
@@ -487,10 +716,11 @@ function renderList(items, container, emptyMsg){
     container.innerHTML = `<p class="empty-msg">${emptyMsg}</p>`;
     return;
   }
-  container.innerHTML = items.map(item => `
+  container.innerHTML = items.map((item, idx) => `
     <div class="item-card" onclick="openSubmission('${item.id}')">
+      <div class="item-avatar" style="background:${avatarColor_(idx)}1a;color:${avatarColor_(idx)}">${ICON_USERS}</div>
       <div class="item-main">
-        <p class="item-cliente">${escapeHtml(item.cliente || 'Sem cliente')}${item.estacao ? ' — ' + escapeHtml(item.estacao) : ''}</p>
+        <p class="item-cliente">${escapeHtml((item.cliente || 'SEM CLIENTE').toUpperCase())}${item.estacao ? ' — ' + escapeHtml(item.estacao.toUpperCase()) : ''}</p>
         <p class="item-name">${escapeHtml(item.resumo)}</p>
         <p class="item-date">${formatDate(item.timestamp)}</p>
       </div>
@@ -517,19 +747,34 @@ function tally_(arr){
   return Object.entries(map).sort((a, b) => b[1] - a[1]);
 }
 
-function renderChartCard_(title, icon, entries, colorClass){
+function renderChartCard_(title, iconSvg, entries, colorClass, showAvatar){
   const max = entries.length ? entries[0][1] : 0;
-  const rows = entries.slice(0, 5).map(([name, count]) => `
-    <div class="chart-row">
+  const rows = entries.map(([name, count], i) => `
+    <div class="chart-row ${i >= 5 ? 'chart-row-extra hidden' : ''}">
+      ${showAvatar ? `<span class="chart-avatar" style="background:${avatarColor_(i)}">${initials_(name)}</span>` : ''}
       <span class="chart-label" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
       <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${max ? Math.max(6, Math.round(count / max * 100)) : 0}%"></div></div>
       <span class="chart-count">${count}</span>
     </div>
   `).join('');
+  const hasExtra = entries.length > 5;
   return `<div class="chart-card ${colorClass}">
-    <p class="chart-title">${icon} ${escapeHtml(title)}</p>
+    <div class="chart-head">
+      <p class="chart-title"><span class="chart-title-icon">${iconSvg}</span>${escapeHtml(title)}</p>
+      ${hasExtra ? `<button type="button" class="chart-viewall" data-expanded="false" onclick="toggleChartExpand_(this)">Ver todos</button>` : ''}
+    </div>
+    <hr class="chart-divider">
     ${rows || '<p class="chart-empty">Sem dados suficientes.</p>'}
   </div>`;
+}
+
+function toggleChartExpand_(btn){
+  const card = btn.closest('.chart-card');
+  const extras = card.querySelectorAll('.chart-row-extra');
+  const expanded = btn.dataset.expanded === 'true';
+  extras.forEach(row => row.classList.toggle('hidden', expanded));
+  btn.dataset.expanded = (!expanded).toString();
+  btn.textContent = expanded ? 'Ver todos' : 'Ver menos';
 }
 
 /* ---------- Dashboard e histórico por cliente ---------- */
@@ -538,7 +783,9 @@ function renderClients(){
   const statsEl = document.getElementById('dashboardStats');
   const chartsEl = document.getElementById('dashboardCharts');
   document.getElementById('clientHistoryContainer').classList.add('hidden');
-  document.getElementById('clientsSubList').textContent = 'Toque em um cliente para ver o histórico de checklists dele.';
+  document.getElementById('clientsSubList').innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    Toque em um cliente para ver o histórico de checklists dele.`;
   container.classList.remove('hidden');
   statsEl.classList.remove('hidden');
   chartsEl.classList.remove('hidden');
@@ -569,9 +816,18 @@ function renderClients(){
   // Dashboard — estatísticas gerais
   const mostRecent = items.reduce((max, it) => new Date(it.timestamp) > new Date(max.timestamp) ? it : max, items[0]);
   statsEl.innerHTML = `
-    <div class="stat-card"><div class="stat-value">${clientNames.length}</div><div class="stat-label">Cliente(s)</div></div>
-    <div class="stat-card"><div class="stat-value">${items.length}</div><div class="stat-label">Checklist(s)</div></div>
-    <div class="stat-card"><div class="stat-value">${formatDate(mostRecent.timestamp)}</div><div class="stat-label">Envio mais recente</div></div>
+    <div class="stat-card">
+      <div class="stat-icon">${ICON_USERS}</div>
+      <div class="stat-body"><div class="stat-value">${clientNames.length}</div><div class="stat-label">Cliente(s)</div></div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-icon">${ICON_CHECK}</div>
+      <div class="stat-body"><div class="stat-value">${items.length}</div><div class="stat-label">Checklist(s)</div></div>
+    </div>
+    <div class="stat-card stat-purple">
+      <div class="stat-icon">${ICON_CALENDAR}</div>
+      <div class="stat-body"><div class="stat-value" style="font-size:15.5px;">${formatDate(mostRecent.timestamp)}</div><div class="stat-label">Envio mais recente</div></div>
+    </div>
   `;
 
   // Dashboard — rankings de clientes, funcionários e empresas
@@ -583,18 +839,20 @@ function renderClients(){
     if(p.empresa) empresas.push(p.empresa);
   }));
   chartsEl.innerHTML =
-    renderChartCard_('Clientes que mais aparecem', '🏢', clienteEntries, 'chart-clientes') +
-    renderChartCard_('Funcionários que mais aparecem', '👷', tally_(funcNomes), 'chart-funcionarios') +
-    renderChartCard_('Empresas que mais aparecem', '🏗️', tally_(empresas), 'chart-empresas');
+    renderChartCard_('Clientes que mais aparecem', ICON_BUILDING, clienteEntries, 'chart-clientes', false) +
+    renderChartCard_('Funcionários que mais aparecem', ICON_USERS, tally_(funcNomes), 'chart-funcionarios', true) +
+    renderChartCard_('Empresas que mais aparecem', ICON_BUILDING, tally_(empresas), 'chart-empresas', false);
 
   // Cartões por cliente, com contagem e data do último envio
-  container.innerHTML = clientNames.map(name => {
+  container.innerHTML = clientNames.map((name, idx) => {
     const list = grouped[name];
     const last = list.reduce((max, it) => new Date(it.timestamp) > new Date(max.timestamp) ? it : max, list[0]);
     const estacoes = [...new Set(list.map(i => i.estacao).filter(Boolean))];
+    const color = avatarColor_(idx);
     return `
     <div class="client-card" onclick="openClientHistory('${encodeURIComponent(name)}')">
-      <div>
+      <div class="client-avatar" style="background:${color}1a;color:${color}">${ICON_BUILDING}</div>
+      <div class="client-info">
         <p class="client-name">${escapeHtml(name)}</p>
         <p class="client-count">${list.length} checklist(s)${estacoes.length ? ' · ' + escapeHtml(estacoes.slice(0,2).join(', ')) + (estacoes.length > 2 ? '…' : '') : ''}</p>
         <p class="client-last">Último envio: ${formatDate(last.timestamp)}</p>
@@ -616,7 +874,10 @@ function openClientHistory(encodedName){
 
   const historyContainer = document.getElementById('clientHistoryContainer');
   historyContainer.classList.remove('hidden');
-  historyContainer.innerHTML = '<button class="client-back" id="clientBackBtn">← Todos os clientes</button><div id="clientHistoryList"></div>';
+  historyContainer.innerHTML = `<button class="client-back" id="clientBackBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Todos os clientes
+    </button><div id="clientHistoryList"></div>`;
   document.getElementById('clientBackBtn').addEventListener('click', ()=>{
     currentClient = null;
     renderClients();
@@ -784,7 +1045,7 @@ function renderSubmission(sub){
   // Fotos (visualizar e baixar)
   const fotosList = document.getElementById('fotosList');
   fotosList.innerHTML = sub.fotos.length
-    ? sub.fotos.map((url, idx) => `<a href="${url}" target="_blank" rel="noopener">📷 Foto ${idx + 1} — abrir / baixar</a>`).join('')
+    ? sub.fotos.map((url, idx) => `<a href="${url}" target="_blank" rel="noopener">${ICON_CAMERA} Foto ${idx + 1} — abrir / baixar</a>`).join('')
     : '<p class="section-sub" style="margin:0;">Nenhuma foto anexada.</p>';
 
   // Identificação — só mostra quem foi realmente preenchido
