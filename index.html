@@ -249,6 +249,11 @@
 
   .has-error{border-color:var(--nok) !important; box-shadow:0 0 0 1px var(--nok);}
   .field-error-text{color:var(--nok);font-size:12px;margin:-6px 20px 14px;}
+  tr.has-error td{background:#fdecea !important;}
+  .nok-warning-row td.nok-warning-cell{
+    background:#fdecea;color:var(--nok);font-size:12px;font-weight:700;
+    padding:9px 12px;border-top:1px solid var(--nok);text-align:left;
+  }
 
   .ident-card{
     display:flex;
@@ -842,6 +847,7 @@ function collectIdentificacao(){
 function clearErrors(){
   document.querySelectorAll('.has-error').forEach(el=>el.classList.remove('has-error'));
   document.querySelectorAll('.field-error-text').forEach(el=>el.remove());
+  document.querySelectorAll('.nok-warning-row').forEach(el=>el.remove());
 }
 
 function addError(el, msg){
@@ -904,7 +910,8 @@ function validateChecklist(){
     flagFirst(container);
   }
 
-  // 3. EPIs e Documentos — cada participante preenchido precisa responder todos os itens
+  // 3. EPIs e Documentos — cada participante preenchido precisa responder todos os itens;
+  // qualquer item marcado como NOK bloqueia o envio e fica destacado na própria linha
   const funcCards = document.querySelectorAll('.funcionario-card');
   for(let i=1;i<=NUM_FUNCIONARIOS;i++){
     const nomeInput = document.querySelector(`[data-idx="${i}"][data-field="nome"]`);
@@ -912,7 +919,19 @@ function validateChecklist(){
     if(!nome) continue;
     let completo = true;
     EPI_ITEMS.forEach(item=>{
-      if(!document.querySelector(`input[name="f${i}_${item.key}"]:checked`)) completo = false;
+      const checkedInput = document.querySelector(`input[name="f${i}_${item.key}"]:checked`);
+      if(!checkedInput){
+        completo = false;
+        return;
+      }
+      if(checkedInput.value === "NOK"){
+        const row = checkedInput.closest('tr');
+        row.classList.add('has-error');
+        if(!row.nextElementSibling || !row.nextElementSibling.classList.contains('nok-warning-row')){
+          row.insertAdjacentHTML('afterend', `<tr class="nok-warning-row"><td colspan="4" class="nok-warning-cell">⚠️ Item reprovado (NOK) — a atividade não pode ser iniciada até que este item seja corrigido.</td></tr>`);
+        }
+        flagFirst(row);
+      }
     });
     if(!completo){
       const card = funcCards[i-1];
