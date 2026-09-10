@@ -820,16 +820,23 @@ function validateChecklist(){
     flagFirst(aprBlock);
   }
 
-  // 2. Identificação — linhas parciais são inválidas; exige ao menos uma linha completa
+  // 2. Identificação — linhas parciais são inválidas; nome precisa ter nome e sobrenome;
+  // exige ao menos uma linha completa
   let completos = 0;
   document.querySelectorAll('.ident-card').forEach(card=>{
     const nome = card.querySelector('[data-field="nome"]').value.trim();
     const funcao = card.querySelector('[data-field="funcao"]').value.trim();
     const empresa = card.querySelector('[data-field="empresa"]').value.trim();
     const algumPreenchido = nome || funcao || empresa;
-    const tudoPreenchido = nome && funcao && empresa;
+    const nomeCompleto = nome.split(/\s+/).filter(Boolean).length >= 2;
+    const tudoPreenchido = nome && funcao && empresa && nomeCompleto;
+
     if(algumPreenchido && !tudoPreenchido){
-      addError(card, 'Preencha nome, função e empresa, ou deixe a linha em branco.');
+      let msg = 'Preencha nome, função e empresa, ou deixe a linha em branco.';
+      if(nome && !nomeCompleto){
+        msg = 'Informe nome e sobrenome completos (não é permitido nome único).';
+      }
+      addError(card, msg);
       flagFirst(card);
     }
     if(tudoPreenchido) completos++;
