@@ -287,6 +287,17 @@
   }
   .ident-input:focus{outline:none;border-color:var(--teal);}
 
+  .add-ident-btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 40px);
+    margin:0 20px 12px;padding:12px;background:#fff;border:1.5px dashed var(--teal);
+    border-radius:10px;color:var(--teal);font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;
+  }
+  .add-ident-btn:hover{background:var(--row-alt);}
+  .add-ident-icon{
+    width:20px;height:20px;border-radius:50%;background:var(--teal);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;flex:none;
+  }
+
   .funcionario-card{
     background:var(--card);
     border:1px solid var(--border);
@@ -572,11 +583,21 @@ let aprPhotos = []; // {name, dataUrl}
 let sessionPin = "";
 
 /* ---------- Monta os cartões de Identificação (Nome / Função / Empresa) ---------- */
+let identCount = 1;
+
 function buildIdentificacao(){
+  identCount = 1;
   const container = document.getElementById('identificacaoContainer');
-  let html = "";
-  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
-    html += `<div class="ident-card">
+  container.innerHTML = "";
+  appendIdentCard(1);
+  updateAddIdentButton();
+}
+buildIdentificacao();
+
+function appendIdentCard(i){
+  const container = document.getElementById('identificacaoContainer');
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = `<div class="ident-card">
       <div class="ident-num">${i}</div>
       <div class="ident-fields">
         <input type="text" class="ident-input" data-idx="${i}" data-field="nome" placeholder="Nome">
@@ -584,53 +605,81 @@ function buildIdentificacao(){
         <input type="text" class="ident-input" data-idx="${i}" data-field="empresa" placeholder="Empresa">
       </div>
     </div>`;
-  }
-  container.innerHTML = html;
+  const card = wrapper.firstElementChild;
+  container.appendChild(card);
+  attachIdentNomeListener(card.querySelector('[data-field="nome"]'));
+}
 
-  // Ao digitar o nome, atualiza automaticamente o título do funcionário no item 3
-  // e o rótulo correspondente na lista suspensa do item 4 (Outros), além de
-  // mostrar/ocultar esses itens conforme o participante existe ou não
-  container.querySelectorAll('input[data-field="nome"]').forEach(input=>{
-    input.addEventListener('input', ()=>{
-      const idx = input.dataset.idx;
-      const nome = input.value.trim();
-      const hasName = !!nome;
+// Ao digitar o nome, atualiza automaticamente o título do funcionário no item 3
+// e o rótulo correspondente na lista suspensa do item 4 (Outros), além de
+// mostrar/ocultar esses itens conforme o participante existe ou não, e revelar
+// o botão de adicionar o próximo participante
+function attachIdentNomeListener(input){
+  input.addEventListener('input', ()=>{
+    const idx = input.dataset.idx;
+    const nome = input.value.trim();
+    const hasName = !!nome;
 
-      const nameEl = document.getElementById('funcName' + idx);
-      if(nameEl) nameEl.textContent = nome ? " — " + nome : "";
+    const nameEl = document.getElementById('funcName' + idx);
+    if(nameEl) nameEl.textContent = nome ? " — " + nome : "";
 
-      const labelEl = document.getElementById('outrosLabel' + idx);
-      if(labelEl) labelEl.textContent = nome || ("Funcionário " + idx);
-      const detailInput = document.getElementById('outrosDetailInput' + idx);
-      if(detailInput) detailInput.placeholder = "Descreva a condição de " + (nome || ("Funcionário " + idx));
+    const labelEl = document.getElementById('outrosLabel' + idx);
+    if(labelEl) labelEl.textContent = nome || ("Funcionário " + idx);
+    const detailInput = document.getElementById('outrosDetailInput' + idx);
+    if(detailInput) detailInput.placeholder = "Descreva a condição de " + (nome || ("Funcionário " + idx));
 
-      // Item 3 — só mostra o cartão do funcionário se ele foi identificado
-      const funcCard = document.getElementById('funcCard' + idx);
-      if(funcCard){
-        funcCard.classList.toggle('hidden', !hasName);
-        updateFuncEmptyState();
-      }
+    // Item 3 — só mostra o cartão do funcionário se ele foi identificado
+    const funcCard = document.getElementById('funcCard' + idx);
+    if(funcCard){
+      funcCard.classList.toggle('hidden', !hasName);
+      updateFuncEmptyState();
+    }
 
-      // Item 4 — só mostra o nome na lista suspensa se ele foi identificado
-      const outrosRow = document.getElementById('outrosRow' + idx);
-      if(outrosRow){
-        outrosRow.classList.toggle('hidden', !hasName);
-        updateOutrosEmptyState();
-        // Se o nome foi apagado, desmarca e limpa qualquer seleção pendente
-        if(!hasName){
-          const chk = document.getElementById('outrosCheck' + idx);
-          if(chk && chk.checked){
-            chk.checked = false;
-            document.getElementById('outrosDetail' + idx).classList.add('hidden');
-            document.getElementById('outrosDetailInput' + idx).value = "";
-            updateOutrosToggleLabel();
-          }
+    // Item 4 — só mostra o nome na lista suspensa se ele foi identificado
+    const outrosRow = document.getElementById('outrosRow' + idx);
+    if(outrosRow){
+      outrosRow.classList.toggle('hidden', !hasName);
+      updateOutrosEmptyState();
+      // Se o nome foi apagado, desmarca e limpa qualquer seleção pendente
+      if(!hasName){
+        const chk = document.getElementById('outrosCheck' + idx);
+        if(chk && chk.checked){
+          chk.checked = false;
+          document.getElementById('outrosDetail' + idx).classList.add('hidden');
+          document.getElementById('outrosDetailInput' + idx).value = "";
+          updateOutrosToggleLabel();
         }
       }
-    });
+    }
+
+    updateAddIdentButton();
   });
 }
-buildIdentificacao();
+
+// Mostra/some o botão "Adicionar outro participante" conforme o preenchimento
+function updateAddIdentButton(){
+  const existingBtn = document.getElementById('addIdentBtn');
+  if(existingBtn) existingBtn.remove();
+
+  if(identCount >= NUM_FUNCIONARIOS) return; // já atingiu o máximo de 7 participantes
+
+  const lastNomeInput = document.querySelector(`[data-idx="${identCount}"][data-field="nome"]`);
+  if(!lastNomeInput || !lastNomeInput.value.trim()) return; // só aparece depois do nome do último preenchido
+
+  const container = document.getElementById('identificacaoContainer');
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.id = 'addIdentBtn';
+  btn.className = 'add-ident-btn';
+  btn.innerHTML = '<span class="add-ident-icon">+</span> Adicionar outro participante';
+  btn.addEventListener('click', ()=>{
+    identCount++;
+    appendIdentCard(identCount);
+    updateAddIdentButton();
+    document.querySelector(`[data-idx="${identCount}"][data-field="nome"]`).focus();
+  });
+  container.appendChild(btn);
+}
 
 /* ---------- Lista suspensa de colaboradores (item 4 - OUTROS) ---------- */
 function nomeParticipante(idx){
@@ -887,10 +936,15 @@ function collectFuncionarios(){
 function collectIdentificacao(){
   const out = [];
   for(let i=1;i<=NUM_FUNCIONARIOS;i++){
-    const nome = document.querySelector(`input[data-idx="${i}"][data-field="nome"]`).value.trim();
-    const funcao = document.querySelector(`input[data-idx="${i}"][data-field="funcao"]`).value.trim();
-    const empresa = document.querySelector(`input[data-idx="${i}"][data-field="empresa"]`).value.trim();
-    out.push({ numero: i, nome, funcao, empresa });
+    const nomeInput = document.querySelector(`input[data-idx="${i}"][data-field="nome"]`);
+    const funcaoInput = document.querySelector(`input[data-idx="${i}"][data-field="funcao"]`);
+    const empresaInput = document.querySelector(`input[data-idx="${i}"][data-field="empresa"]`);
+    out.push({
+      numero: i,
+      nome: nomeInput ? nomeInput.value.trim() : "",
+      funcao: funcaoInput ? funcaoInput.value.trim() : "",
+      empresa: empresaInput ? empresaInput.value.trim() : ""
+    });
   }
   return out;
 }
