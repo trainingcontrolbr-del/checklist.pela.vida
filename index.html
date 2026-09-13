@@ -522,4 +522,689 @@
       <p class="section-title"><span class="section-num">5.</span> OBSERVAÇÃO</p>
       <p class="section-sub">Faça aqui alguma observação ou comentário sobre a atividade. Caso não haja nenhuma, marque a opção correspondente.</p>
       <textarea id="observacao" rows="3" placeholder="Insira sua resposta"></textarea>
-      <label 
+      <label class="nada-consta-check">
+        <input type="checkbox" id="obsNadaConsta">
+        <span>Nenhuma observação a ser registrada.</span>
+      </label>
+    </section>
+
+    <div class="submit-wrap">
+      <button class="btn" id="submitBtn">Enviar checklist</button>
+      <div class="status-msg" id="statusMsg"></div>
+    </div>
+  </div>
+
+  <!-- ============ SUCCESS SCREEN ============ -->
+  <div id="successScreen" class="success-screen hidden">
+    <div class="check">✅</div>
+    <h2>Checklist enviado!</h2>
+    <p>Seu registro foi salvo com sucesso. Obrigado por cuidar da segurança de todos.</p>
+    <button class="btn" id="newChecklistBtn">Novo checklist</button>
+  </div>
+
+  <!-- ============ MODAL DOS CARTÕES ============ -->
+  <div class="card-modal hidden" id="cardModal">
+    <div class="card-modal-backdrop" id="cardModalBackdrop"></div>
+    <div class="card-modal-content">
+      <button class="card-modal-close" id="cardModalClose" aria-label="Fechar">✕</button>
+      <img id="cardModalImg" src="" alt="Cartão de referência">
+    </div>
+  </div>
+
+  <!-- ============ MODAL DE ALERTA NOK ============ -->
+  <div class="warning-modal hidden" id="warningModal">
+    <div class="warning-modal-backdrop"></div>
+    <div class="warning-modal-content">
+      <div class="warning-icon">⚠️</div>
+      <h3>Atenção</h3>
+      <p>O checklist não poderá ser concluído, e a atividade não poderá ser iniciada até que o item seja adequado.</p>
+      <button class="btn" id="warningModalClose">Entendi</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO
+   Cole aqui a URL do seu Web App do Google Apps Script (termina em /exec)
+   ===================================================================== */
+const API_URL = "https://script.google.com/macros/s/AKfycbx3xrs4Rd9WNH_QiyMjqOhAsZCeHmxwOOUprA9rdGkQA5qWrsGaeuuB7vU95wuTO1gS9g/exec";
+
+const NUM_FUNCIONARIOS = 7;
+const EPI_ITEMS = [
+  { key: "epi_basico", label: "🦺 Usando os EPIs básicos (Capacete, protetor auricular, uniforme)" },
+  { key: "colete", label: "🦺 Colete salva-vidas" },
+  { key: "cracha", label: "Crachá (obrigatório na Vale)" },
+  { key: "apr_art", label: "Assinou a APR / ART?" },
+  { key: "treinamentos", label: "Treinamentos realizados (Integração, ART)" }
+];
+
+let aprPhotos = []; // {name, dataUrl}
+let sessionPin = "";
+
+/* ---------- Monta os cartões de Identificação (Nome / Função / Empresa) ---------- */
+let identCount = 1;
+
+function buildIdentificacao(){
+  identCount = 1;
+  const container = document.getElementById('identificacaoContainer');
+  container.innerHTML = "";
+  appendIdentCard(1);
+  updateAddIdentButton();
+}
+buildIdentificacao();
+
+function appendIdentCard(i){
+  const container = document.getElementById('identificacaoContainer');
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = `<div class="ident-card">
+      <div class="ident-num">${i}</div>
+      <div class="ident-fields">
+        <input type="text" class="ident-input" data-idx="${i}" data-field="nome" placeholder="Nome">
+        <input type="text" class="ident-input" data-idx="${i}" data-field="funcao" placeholder="Função">
+        <input type="text" class="ident-input" data-idx="${i}" data-field="empresa" placeholder="Empresa">
+      </div>
+    </div>`;
+  const card = wrapper.firstElementChild;
+  container.appendChild(card);
+  attachIdentNomeListener(card.querySelector('[data-field="nome"]'));
+}
+
+// Ao digitar o nome, atualiza automaticamente o título do funcionário no item 3
+// e o rótulo correspondente na lista suspensa do item 4 (Outros), além de
+// mostrar/ocultar esses itens conforme o participante existe ou não, e revelar
+// o botão de adicionar o próximo participante
+function attachIdentNomeListener(input){
+  input.addEventListener('input', ()=>{
+    const idx = input.dataset.idx;
+    const nome = input.value.trim();
+    const hasName = !!nome;
+
+    const nameEl = document.getElementById('funcName' + idx);
+    if(nameEl) nameEl.textContent = nome ? " — " + nome : "";
+
+    const labelEl = document.getElementById('outrosLabel' + idx);
+    if(labelEl) labelEl.textContent = nome || ("Funcionário " + idx);
+    const detailInput = document.getElementById('outrosDetailInput' + idx);
+    if(detailInput) detailInput.placeholder = "Descreva a condição de " + (nome || ("Funcionário " + idx));
+
+    // Item 3 — só mostra o cartão do funcionário se ele foi identificado
+    const funcCard = document.getElementById('funcCard' + idx);
+    if(funcCard){
+      funcCard.classList.toggle('hidden', !hasName);
+      updateFuncEmptyState();
+    }
+
+    // Item 4 — só mostra o nome na lista suspensa se ele foi identificado
+    const outrosRow = document.getElementById('outrosRow' + idx);
+    if(outrosRow){
+      outrosRow.classList.toggle('hidden', !hasName);
+      updateOutrosEmptyState();
+      // Se o nome foi apagado, desmarca e limpa qualquer seleção pendente
+      if(!hasName){
+        const chk = document.getElementById('outrosCheck' + idx);
+        if(chk && chk.checked){
+          chk.checked = false;
+          document.getElementById('outrosDetail' + idx).classList.add('hidden');
+          document.getElementById('outrosDetailInput' + idx).value = "";
+          updateOutrosToggleLabel();
+        }
+      }
+    }
+
+    updateAddIdentButton();
+  });
+}
+
+// Mostra/some o botão "Adicionar outro participante" conforme o preenchimento
+function updateAddIdentButton(){
+  const existingBtn = document.getElementById('addIdentBtn');
+  if(existingBtn) existingBtn.remove();
+
+  if(identCount >= NUM_FUNCIONARIOS) return; // já atingiu o máximo de 7 participantes
+
+  const lastNomeInput = document.querySelector(`[data-idx="${identCount}"][data-field="nome"]`);
+  if(!lastNomeInput || !lastNomeInput.value.trim()) return; // só aparece depois do nome do último preenchido
+
+  const container = document.getElementById('identificacaoContainer');
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.id = 'addIdentBtn';
+  btn.className = 'add-ident-btn';
+  btn.innerHTML = '<span class="add-ident-icon">+</span> Adicionar outro participante';
+  btn.addEventListener('click', ()=>{
+    identCount++;
+    appendIdentCard(identCount);
+    updateAddIdentButton();
+    document.querySelector(`[data-idx="${identCount}"][data-field="nome"]`).focus();
+  });
+  container.appendChild(btn);
+}
+
+/* ---------- Lista suspensa de colaboradores (item 4 - OUTROS) ---------- */
+function nomeParticipante(idx){
+  const input = document.querySelector(`input[data-idx="${idx}"][data-field="nome"]`);
+  const nome = input ? input.value.trim() : "";
+  return nome || ("Funcionário " + idx);
+}
+
+function buildOutrosPanel(){
+  const panel = document.getElementById('outrosPanel');
+  let html = `<p class="outros-empty-note" id="outrosEmptyMsg">Preencha a Identificação para liberar os nomes aqui.</p>`;
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    html += `<div class="outros-row hidden" id="outrosRow${i}">
+      <label class="outros-check-row">
+        <input type="checkbox" class="outros-check" id="outrosCheck${i}" data-idx="${i}">
+        <span id="outrosLabel${i}">${nomeParticipante(i)}</span>
+      </label>
+      <div class="outros-detail hidden" id="outrosDetail${i}">
+        <input type="text" class="outros-detail-input" id="outrosDetailInput${i}" placeholder="Descreva a condição de ${nomeParticipante(i)}">
+      </div>
+    </div>`;
+  }
+  panel.innerHTML = html;
+
+  panel.querySelectorAll('.outros-check').forEach(chk=>{
+    chk.addEventListener('change', ()=>{
+      const idx = chk.dataset.idx;
+      const detail = document.getElementById('outrosDetail' + idx);
+      detail.classList.toggle('hidden', !chk.checked);
+      updateOutrosToggleLabel();
+      if(chk.checked){
+        document.getElementById('outrosDetailInput' + idx).focus();
+        // Selecionar um colaborador é incompatível com "não houve relato"
+        const nadaConsta = document.getElementById('outrosNadaConsta');
+        if(nadaConsta) nadaConsta.checked = false;
+      }
+    });
+  });
+}
+buildOutrosPanel();
+
+/* ---------- Exclusividade: "nada consta" nos itens 4 e 5 ---------- */
+document.getElementById('outrosNadaConsta').addEventListener('change', (e)=>{
+  if(e.target.checked){
+    // Marcar "não houve relato" desmarca e limpa qualquer colaborador selecionado
+    document.querySelectorAll('.outros-check:checked').forEach(chk=>{
+      chk.checked = false;
+      const idx = chk.dataset.idx;
+      document.getElementById('outrosDetail' + idx).classList.add('hidden');
+      document.getElementById('outrosDetailInput' + idx).value = "";
+    });
+    updateOutrosToggleLabel();
+    document.getElementById('outrosPanel').classList.add('hidden');
+    document.getElementById('outrosToggle').classList.remove('open');
+  }
+});
+
+document.getElementById('observacao').addEventListener('input', (e)=>{
+  if(e.target.value.trim()){
+    document.getElementById('obsNadaConsta').checked = false;
+  }
+});
+document.getElementById('obsNadaConsta').addEventListener('change', (e)=>{
+  if(e.target.checked){
+    document.getElementById('observacao').value = "";
+  }
+});
+
+function updateOutrosEmptyState(){
+  const anyVisible = document.querySelectorAll('.outros-row:not(.hidden)').length > 0;
+  const msg = document.getElementById('outrosEmptyMsg');
+  if(msg) msg.classList.toggle('hidden', anyVisible);
+}
+
+function updateOutrosToggleLabel(){
+  const checked = document.querySelectorAll('.outros-check:checked').length;
+  const labelEl = document.getElementById('outrosToggleLabel');
+  labelEl.textContent = checked > 0
+    ? checked + " colaborador(es) selecionado(s)"
+    : "Selecionar colaborador(es) com alguma condição";
+}
+
+document.getElementById('outrosToggle').addEventListener('click', ()=>{
+  const panel = document.getElementById('outrosPanel');
+  const btn = document.getElementById('outrosToggle');
+  panel.classList.toggle('hidden');
+  btn.classList.toggle('open');
+});
+
+function collectOutros(){
+  const nadaConsta = document.getElementById('outrosNadaConsta');
+  if(nadaConsta && nadaConsta.checked){
+    return "Não houve relato de aspectos físicos ou psicológicos por parte de nenhum participante da tarefa.";
+  }
+  const entries = [];
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    const chk = document.getElementById('outrosCheck' + i);
+    if(chk && chk.checked){
+      const nome = nomeParticipante(i);
+      const desc = document.getElementById('outrosDetailInput' + i).value.trim();
+      entries.push(nome + (desc ? ": " + desc : " (sem descrição informada)"));
+    }
+  }
+  return entries.length ? entries.join("\n") : "";
+}
+
+/* ---------- Monta os blocos de funcionário dinamicamente ---------- */
+function buildFuncionarios(){
+  const container = document.getElementById('funcionariosContainer');
+  let html = `<p class="empty-note" id="funcEmptyMsg">Preencha a Identificação para liberar os funcionários aqui.</p>`;
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    html += `<div class="funcionario-card hidden" id="funcCard${i}">
+      <div class="funcionario-title">FUNCIONÁRIO ${i}<span class="func-name" id="funcName${i}"></span>
+        <small>O funcionário corresponde ao número que você citou acima na IDENTIFICAÇÃO</small>
+      </div>
+      <table class="epi">
+        <tr><th></th><th>OK</th><th>NOK</th><th>N/A</th></tr>`;
+    EPI_ITEMS.forEach(item=>{
+      html += `<tr>
+        <td class="item-label">${item.label}</td>
+        <td><input type="radio" name="f${i}_${item.key}" value="OK"></td>
+        <td><input type="radio" name="f${i}_${item.key}" value="NOK"></td>
+        <td><input type="radio" name="f${i}_${item.key}" value="N/A"></td>
+      </tr>`;
+    });
+    html += `<tr id="f${i}_outros_row_1">
+        <td class="item-label">Outros (especifique)</td>
+        <td colspan="3"><input type="text" class="epi-outros-input" id="f${i}_outros_1" data-func="${i}" data-outros-idx="1" placeholder="Opcional"></td>
+      </tr>`;
+    html += `</table></div>`;
+  }
+  container.innerHTML = html;
+
+  // Sempre que um "NOK" for marcado, avisa que o checklist não pode ser concluído
+  container.querySelectorAll('input[type="radio"][value="NOK"]').forEach(radio=>{
+    radio.addEventListener('change', ()=>{
+      if(radio.checked) showWarningModal();
+    });
+  });
+
+  // Campo "Outros (especifique)" progressivo: preencheu um, libera o próximo
+  container.querySelectorAll('.epi-outros-input').forEach(attachEpiOutrosListener);
+}
+buildFuncionarios();
+
+const MAX_OUTROS_POR_FUNCIONARIO = 5;
+
+function attachEpiOutrosListener(input){
+  input.addEventListener('input', ()=>{
+    if(!input.value.trim()) return;
+    const funcIdx = input.dataset.func;
+    const outrosIdx = parseInt(input.dataset.outrosIdx, 10);
+    if(outrosIdx >= MAX_OUTROS_POR_FUNCIONARIO) return;
+    const nextIdx = outrosIdx + 1;
+    if(document.getElementById(`f${funcIdx}_outros_${nextIdx}`)) return; // já existe, não duplica
+
+    const currentRow = document.getElementById(`f${funcIdx}_outros_row_${outrosIdx}`);
+    currentRow.insertAdjacentHTML('afterend', `
+      <tr id="f${funcIdx}_outros_row_${nextIdx}">
+        <td class="item-label"></td>
+        <td colspan="3"><input type="text" class="epi-outros-input" id="f${funcIdx}_outros_${nextIdx}" data-func="${funcIdx}" data-outros-idx="${nextIdx}" placeholder="Opcional"></td>
+      </tr>`);
+    attachEpiOutrosListener(document.getElementById(`f${funcIdx}_outros_${nextIdx}`));
+  });
+}
+
+function showWarningModal(){
+  document.getElementById('warningModal').classList.remove('hidden');
+}
+function closeWarningModal(){
+  document.getElementById('warningModal').classList.add('hidden');
+}
+document.getElementById('warningModalClose').addEventListener('click', closeWarningModal);
+
+function updateFuncEmptyState(){
+  const anyVisible = document.querySelectorAll('.funcionario-card:not(.hidden)').length > 0;
+  const msg = document.getElementById('funcEmptyMsg');
+  if(msg) msg.classList.toggle('hidden', anyVisible);
+}
+
+/* ---------- PIN ---------- */
+document.getElementById('pinSubmit').addEventListener('click', verifyPin);
+document.getElementById('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') verifyPin(); });
+
+async function verifyPin(){
+  const pin = document.getElementById('pinInput').value.trim();
+  const errEl = document.getElementById('pinError');
+  errEl.textContent = "";
+  if(!pin){ errEl.textContent = "Digite o PIN."; return; }
+
+  const btn = document.getElementById('pinSubmit');
+  btn.disabled = true; btn.textContent = "Verificando...";
+
+  try{
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "verifyPin", pin })
+    });
+    const data = await res.json();
+    if(data.ok){
+      sessionPin = pin;
+      document.getElementById('pinScreen').classList.add('hidden');
+      document.getElementById('formScreen').classList.remove('hidden');
+    } else {
+      errEl.textContent = "PIN incorreto. Tente novamente.";
+    }
+  }catch(err){
+    errEl.textContent = "Erro de conexão. Verifique sua internet e tente novamente.";
+  }
+  btn.disabled = false; btn.textContent = "Entrar";
+}
+
+/* ---------- Fotos da APR ---------- */
+document.getElementById('aprCamera').addEventListener('change', e=>handleFiles(e.target.files));
+document.getElementById('aprGallery').addEventListener('change', e=>handleFiles(e.target.files));
+
+function handleFiles(fileList){
+  Array.from(fileList).forEach(file=>{
+    compressImage(file, dataUrl=>{
+      aprPhotos.push({ name: file.name || ("apr_" + Date.now() + ".jpg"), dataUrl });
+      renderThumbs();
+    });
+  });
+}
+
+function compressImage(file, callback){
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const maxW = 1280;
+      const scale = Math.min(1, maxW / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      callback(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderThumbs(){
+  const wrap = document.getElementById('aprThumbs');
+  wrap.innerHTML = aprPhotos.map((p, idx)=>`
+    <div class="apr-thumb">
+      <img src="${p.dataUrl}">
+      <button onclick="removePhoto(${idx})" type="button">✕</button>
+    </div>
+  `).join('');
+}
+function removePhoto(idx){
+  aprPhotos.splice(idx,1);
+  renderThumbs();
+}
+
+/* ---------- Envio do checklist ---------- */
+document.getElementById('submitBtn').addEventListener('click', submitChecklist);
+
+function collectFuncionarios(){
+  const out = [];
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    const entry = { funcionario: i };
+    EPI_ITEMS.forEach(item=>{
+      const el = document.querySelector(`input[name="f${i}_${item.key}"]:checked`);
+      entry[item.key] = el ? el.value : "";
+    });
+    const outrosValores = [];
+    document.querySelectorAll(`.epi-outros-input[data-func="${i}"]`).forEach(el=>{
+      const val = el.value.trim();
+      if(val) outrosValores.push(val);
+    });
+    entry.outros = outrosValores.join("; ");
+    out.push(entry);
+  }
+  return out;
+}
+
+function collectIdentificacao(){
+  const out = [];
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    const nomeInput = document.querySelector(`input[data-idx="${i}"][data-field="nome"]`);
+    const funcaoInput = document.querySelector(`input[data-idx="${i}"][data-field="funcao"]`);
+    const empresaInput = document.querySelector(`input[data-idx="${i}"][data-field="empresa"]`);
+    out.push({
+      numero: i,
+      nome: nomeInput ? nomeInput.value.trim() : "",
+      funcao: funcaoInput ? funcaoInput.value.trim() : "",
+      empresa: empresaInput ? empresaInput.value.trim() : ""
+    });
+  }
+  return out;
+}
+
+/* ---------- Validação com destaque em vermelho ---------- */
+function clearErrors(){
+  document.querySelectorAll('.has-error').forEach(el=>el.classList.remove('has-error'));
+  document.querySelectorAll('.field-error-text').forEach(el=>el.remove());
+  document.querySelectorAll('.nok-warning-row').forEach(el=>el.remove());
+}
+
+function addError(el, msg){
+  el.classList.add('has-error');
+  const err = document.createElement('div');
+  err.className = 'field-error-text';
+  err.textContent = msg;
+  el.insertAdjacentElement('afterend', err);
+}
+
+function validateChecklist(){
+  clearErrors();
+  let firstError = null;
+  let hasError = false;
+  const flagFirst = el => { hasError = true; if(!firstError) firstError = el; };
+
+  // Cabeçalho — Cliente e Estação
+  const clienteInput = document.getElementById('clienteInput');
+  const estacaoInput = document.getElementById('estacaoInput');
+  if(!clienteInput.value.trim()){
+    addError(clienteInput, 'Informe o cliente.');
+    flagFirst(clienteInput);
+  }
+  if(!estacaoInput.value.trim()){
+    addError(estacaoInput, 'Informe a estação.');
+    flagFirst(estacaoInput);
+  }
+
+  // 1. APR — exige ao menos uma foto
+  if(aprPhotos.length === 0){
+    const aprBlock = document.querySelector('.apr-block');
+    addError(aprBlock, 'Adicione ao menos uma foto da APR.');
+    flagFirst(aprBlock);
+  }
+
+  // 2. Identificação — linhas parciais são inválidas; nome precisa ter nome e sobrenome;
+  // exige ao menos uma linha completa
+  let completos = 0;
+  document.querySelectorAll('.ident-card').forEach(card=>{
+    const nome = card.querySelector('[data-field="nome"]').value.trim();
+    const funcao = card.querySelector('[data-field="funcao"]').value.trim();
+    const empresa = card.querySelector('[data-field="empresa"]').value.trim();
+    const algumPreenchido = nome || funcao || empresa;
+    const nomeCompleto = nome.split(/\s+/).filter(Boolean).length >= 2;
+    const tudoPreenchido = nome && funcao && empresa && nomeCompleto;
+
+    if(algumPreenchido && !tudoPreenchido){
+      let msg = 'Preencha nome, função e empresa, ou deixe a linha em branco.';
+      if(nome && !nomeCompleto){
+        msg = 'Informe nome e sobrenome completos (não é permitido nome único).';
+      }
+      addError(card, msg);
+      flagFirst(card);
+    }
+    if(tudoPreenchido) completos++;
+  });
+  if(completos === 0){
+    const container = document.getElementById('identificacaoContainer');
+    addError(container, 'Preencha ao menos um participante completo.');
+    flagFirst(container);
+  }
+
+  // 3. EPIs e Documentos — cada participante preenchido precisa responder todos os itens;
+  // qualquer item marcado como NOK bloqueia o envio e fica destacado na própria linha
+  const funcCards = document.querySelectorAll('.funcionario-card');
+  for(let i=1;i<=NUM_FUNCIONARIOS;i++){
+    const nomeInput = document.querySelector(`[data-idx="${i}"][data-field="nome"]`);
+    const nome = nomeInput ? nomeInput.value.trim() : "";
+    if(!nome) continue;
+    let completo = true;
+    EPI_ITEMS.forEach(item=>{
+      const checkedInput = document.querySelector(`input[name="f${i}_${item.key}"]:checked`);
+      if(!checkedInput){
+        completo = false;
+        return;
+      }
+      if(checkedInput.value === "NOK"){
+        const row = checkedInput.closest('tr');
+        row.classList.add('has-error');
+        if(!row.nextElementSibling || !row.nextElementSibling.classList.contains('nok-warning-row')){
+          row.insertAdjacentHTML('afterend', `<tr class="nok-warning-row"><td colspan="4" class="nok-warning-cell">⚠️ Item reprovado (NOK) — a atividade não pode ser iniciada até que este item seja corrigido.</td></tr>`);
+        }
+        flagFirst(row);
+      }
+    });
+    if(!completo){
+      const card = funcCards[i-1];
+      addError(card, 'Responda OK, NOK ou N/A em todos os itens deste funcionário.');
+      flagFirst(card);
+    }
+  }
+
+  // 4. Outros — se um nome está marcado, a descrição é obrigatória; o item inteiro
+  // agora é obrigatório: precisa ter ao menos um colaborador descrito OU marcar
+  // que não houve relato
+  document.querySelectorAll('.outros-check:checked').forEach(chk=>{
+    const idx = chk.dataset.idx;
+    const input = document.getElementById('outrosDetailInput' + idx);
+    if(!input.value.trim()){
+      addError(input, 'Descreva a condição ou desmarque o nome.');
+      flagFirst(document.getElementById('outrosPanel'));
+    }
+  });
+  const outrosMarcados = document.querySelectorAll('.outros-check:checked').length > 0;
+  const outrosNadaConsta = document.getElementById('outrosNadaConsta').checked;
+  if(!outrosMarcados && !outrosNadaConsta){
+    const wrap = document.querySelector('.outros-select-wrap');
+    addError(wrap, 'Selecione um colaborador ou marque que não houve relato.');
+    flagFirst(wrap);
+  }
+
+  // 5. Observação — agora obrigatório: precisa ter texto OU marcar "nenhuma observação"
+  const observacaoTexto = document.getElementById('observacao').value.trim();
+  const obsNadaConsta = document.getElementById('obsNadaConsta').checked;
+  if(!observacaoTexto && !obsNadaConsta){
+    const obsField = document.getElementById('observacao');
+    addError(obsField, 'Escreva uma observação ou marque que não há nenhuma a registrar.');
+    flagFirst(obsField);
+  }
+
+  if(hasError && firstError){
+    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  return !hasError;
+}
+
+async function submitChecklist(){
+  const statusEl = document.getElementById('statusMsg');
+  statusEl.textContent = "";
+  statusEl.className = "status-msg";
+
+  if(!validateChecklist()){
+    statusEl.textContent = "Corrija os itens destacados em vermelho antes de enviar.";
+    statusEl.className = "status-msg err";
+    return;
+  }
+
+  const identificacao = collectIdentificacao();
+
+  const payload = {
+    action: "submit",
+    pin: sessionPin,
+    cliente: document.getElementById('clienteInput').value.trim(),
+    estacao: document.getElementById('estacaoInput').value.trim(),
+    identificacao,
+    funcionarios: collectFuncionarios(),
+    aprPhotos: aprPhotos.map(p=>({ name: p.name, dataUrl: p.dataUrl })),
+    outros: collectOutros(),
+    observacao: document.getElementById('observacao').value.trim()
+  };
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = "Enviando...";
+  statusEl.textContent = "Enviando checklist, aguarde...";
+
+  try{
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(data.ok){
+      document.getElementById('formScreen').classList.add('hidden');
+      document.getElementById('successScreen').classList.remove('hidden');
+    } else {
+      statusEl.textContent = data.message || "Não foi possível enviar. Tente novamente.";
+      statusEl.className = "status-msg err";
+    }
+  }catch(err){
+    statusEl.textContent = "Erro de conexão. Tente novamente.";
+    statusEl.className = "status-msg err";
+  }
+  btn.disabled = false; btn.textContent = "Enviar checklist";
+}
+
+document.getElementById('newChecklistBtn').addEventListener('click', ()=>{
+  document.getElementById('clienteInput').value = "";
+  document.getElementById('estacaoInput').value = "";
+  buildIdentificacao();
+  buildFuncionarios();
+  buildOutrosPanel();
+  updateFuncEmptyState();
+  updateOutrosEmptyState();
+  updateOutrosToggleLabel();
+  document.getElementById('outrosPanel').classList.add('hidden');
+  document.getElementById('outrosToggle').classList.remove('open');
+  document.getElementById('outrosNadaConsta').checked = false;
+  document.getElementById('observacao').value = "";
+  document.getElementById('obsNadaConsta').checked = false;
+  aprPhotos = [];
+  renderThumbs();
+  document.getElementById('successScreen').classList.add('hidden');
+  document.getElementById('formScreen').classList.remove('hidden');
+  window.scrollTo(0,0);
+});
+
+/* ---------- Modal dos cartões de referência ---------- */
+function openCardModal(src, alt){
+  document.getElementById('cardModalImg').src = src;
+  document.getElementById('cardModalImg').alt = alt;
+  document.getElementById('cardModal').classList.remove('hidden');
+}
+function closeCardModal(){
+  document.getElementById('cardModal').classList.add('hidden');
+  document.getElementById('cardModalImg').src = "";
+}
+document.getElementById('btnCheckStatus').addEventListener('click', ()=>{
+  openCardModal('cards/card-check-status.jpg', 'Cartão Início Seguro — Check Status');
+});
+document.getElementById('btnRegrasVida').addEventListener('click', ()=>{
+  openCardModal('cards/card-regras-vida.jpg', 'Regras para Vida da SGS e Stop Work');
+});
+document.getElementById('cardModalClose').addEventListener('click', closeCardModal);
+document.getElementById('cardModalBackdrop').addEventListener('click', closeCardModal);
+
+/* ---------- PWA: registra o service worker ---------- */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
