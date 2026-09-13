@@ -186,6 +186,15 @@
   }
   .outros-detail-input:focus{outline:none;border-color:var(--teal);}
 
+  .nada-consta-check{
+    display:flex;align-items:flex-start;gap:10px;margin-top:12px;padding:12px;
+    background:var(--row-alt);border:1px solid var(--border);border-radius:8px;
+    font-size:13px;color:var(--text);cursor:pointer;line-height:1.4;
+  }
+  .nada-consta-check input[type=checkbox]{
+    width:18px;height:18px;flex:none;margin-top:1px;accent-color:var(--teal);cursor:pointer;
+  }
+
   .meta-header{
     display:flex;gap:10px;padding:14px 20px;background:var(--row-alt);
     border-bottom:1px solid var(--border);
@@ -480,7 +489,7 @@
       </p>
       <div class="warn-box">✅ Preencha por meio de texto livre. Ex: "João disse que está com enjoo e não está se sentindo bem"</div>
       <div class="warn-box">✅ Qualquer registro abaixo, a liderança da HidroMares deve ser comunicada antes do início das atividades.</div>
-      <p class="section-sub"><b>IMPORTANTE:</b> Abaixo, descreva APENAS aquele colaborador que sinalizar alguma condição, caso não, deixe em branco.</p>
+      <p class="section-sub"><b>IMPORTANTE:</b> Abaixo, descreva APENAS aquele colaborador que sinalizar alguma condição. Caso não haja nenhum, marque a opção correspondente.</p>
 
       <div class="outros-select-wrap">
         <button type="button" class="outros-toggle" id="outrosToggle">
@@ -489,13 +498,22 @@
         </button>
         <div class="outros-panel hidden" id="outrosPanel"></div>
       </div>
+
+      <label class="nada-consta-check">
+        <input type="checkbox" id="outrosNadaConsta">
+        <span>Não houve relato de aspectos físicos ou psicológicos por parte de nenhum participante da tarefa.</span>
+      </label>
     </section>
 
     <!-- 12. Observação -->
     <section>
-      <p class="section-title"><span class="section-num">5.</span> OBSERVAÇÃO <span style="font-weight:400;font-size:12px;color:var(--muted);">(item não obrigatório)</span></p>
-      <p class="section-sub">Caso queira, faça aqui alguma observação ou comentário sobre a atividade</p>
+      <p class="section-title"><span class="section-num">5.</span> OBSERVAÇÃO</p>
+      <p class="section-sub">Faça aqui alguma observação ou comentário sobre a atividade. Caso não haja nenhuma, marque a opção correspondente.</p>
       <textarea id="observacao" rows="3" placeholder="Insira sua resposta"></textarea>
+      <label class="nada-consta-check">
+        <input type="checkbox" id="obsNadaConsta">
+        <span>Nenhuma observação a ser registrada.</span>
+      </label>
     </section>
 
     <div class="submit-wrap">
@@ -645,11 +663,41 @@ function buildOutrosPanel(){
       updateOutrosToggleLabel();
       if(chk.checked){
         document.getElementById('outrosDetailInput' + idx).focus();
+        // Selecionar um colaborador é incompatível com "não houve relato"
+        const nadaConsta = document.getElementById('outrosNadaConsta');
+        if(nadaConsta) nadaConsta.checked = false;
       }
     });
   });
 }
 buildOutrosPanel();
+
+/* ---------- Exclusividade: "nada consta" nos itens 4 e 5 ---------- */
+document.getElementById('outrosNadaConsta').addEventListener('change', (e)=>{
+  if(e.target.checked){
+    // Marcar "não houve relato" desmarca e limpa qualquer colaborador selecionado
+    document.querySelectorAll('.outros-check:checked').forEach(chk=>{
+      chk.checked = false;
+      const idx = chk.dataset.idx;
+      document.getElementById('outrosDetail' + idx).classList.add('hidden');
+      document.getElementById('outrosDetailInput' + idx).value = "";
+    });
+    updateOutrosToggleLabel();
+    document.getElementById('outrosPanel').classList.add('hidden');
+    document.getElementById('outrosToggle').classList.remove('open');
+  }
+});
+
+document.getElementById('observacao').addEventListener('input', (e)=>{
+  if(e.target.value.trim()){
+    document.getElementById('obsNadaConsta').checked = false;
+  }
+});
+document.getElementById('obsNadaConsta').addEventListener('change', (e)=>{
+  if(e.target.checked){
+    document.getElementById('observacao').value = "";
+  }
+});
 
 function updateOutrosEmptyState(){
   const anyVisible = document.querySelectorAll('.outros-row:not(.hidden)').length > 0;
@@ -673,6 +721,10 @@ document.getElementById('outrosToggle').addEventListener('click', ()=>{
 });
 
 function collectOutros(){
+  const nadaConsta = document.getElementById('outrosNadaConsta');
+  if(nadaConsta && nadaConsta.checked){
+    return "Não houve relato de aspectos físicos ou psicológicos por parte de nenhum participante da tarefa.";
+  }
   const entries = [];
   for(let i=1;i<=NUM_FUNCIONARIOS;i++){
     const chk = document.getElementById('outrosCheck' + i);
@@ -940,7 +992,9 @@ function validateChecklist(){
     }
   }
 
-  // 4. Outros — se um nome está marcado, a descrição é obrigatória
+  // 4. Outros — se um nome está marcado, a descrição é obrigatória; o item inteiro
+  // agora é obrigatório: precisa ter ao menos um colaborador descrito OU marcar
+  // que não houve relato
   document.querySelectorAll('.outros-check:checked').forEach(chk=>{
     const idx = chk.dataset.idx;
     const input = document.getElementById('outrosDetailInput' + idx);
@@ -949,6 +1003,22 @@ function validateChecklist(){
       flagFirst(document.getElementById('outrosPanel'));
     }
   });
+  const outrosMarcados = document.querySelectorAll('.outros-check:checked').length > 0;
+  const outrosNadaConsta = document.getElementById('outrosNadaConsta').checked;
+  if(!outrosMarcados && !outrosNadaConsta){
+    const wrap = document.querySelector('.outros-select-wrap');
+    addError(wrap, 'Selecione um colaborador ou marque que não houve relato.');
+    flagFirst(wrap);
+  }
+
+  // 5. Observação — agora obrigatório: precisa ter texto OU marcar "nenhuma observação"
+  const observacaoTexto = document.getElementById('observacao').value.trim();
+  const obsNadaConsta = document.getElementById('obsNadaConsta').checked;
+  if(!observacaoTexto && !obsNadaConsta){
+    const obsField = document.getElementById('observacao');
+    addError(obsField, 'Escreva uma observação ou marque que não há nenhuma a registrar.');
+    flagFirst(obsField);
+  }
 
   if(hasError && firstError){
     firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1017,7 +1087,9 @@ document.getElementById('newChecklistBtn').addEventListener('click', ()=>{
   updateOutrosToggleLabel();
   document.getElementById('outrosPanel').classList.add('hidden');
   document.getElementById('outrosToggle').classList.remove('open');
+  document.getElementById('outrosNadaConsta').checked = false;
   document.getElementById('observacao').value = "";
+  document.getElementById('obsNadaConsta').checked = false;
   aprPhotos = [];
   renderThumbs();
   document.getElementById('successScreen').classList.add('hidden');
