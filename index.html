@@ -805,9 +805,9 @@ function buildFuncionarios(){
         <td><input type="radio" name="f${i}_${item.key}" value="N/A"></td>
       </tr>`;
     });
-    html += `<tr>
+    html += `<tr id="f${i}_outros_row_1">
         <td class="item-label">Outros (especifique)</td>
-        <td colspan="3"><input type="text" class="epi-outros-input" id="f${i}_outros" placeholder="Opcional"></td>
+        <td colspan="3"><input type="text" class="epi-outros-input" id="f${i}_outros_1" data-func="${i}" data-outros-idx="1" placeholder="Opcional"></td>
       </tr>`;
     html += `</table></div>`;
   }
@@ -819,8 +819,32 @@ function buildFuncionarios(){
       if(radio.checked) showWarningModal();
     });
   });
+
+  // Campo "Outros (especifique)" progressivo: preencheu um, libera o próximo
+  container.querySelectorAll('.epi-outros-input').forEach(attachEpiOutrosListener);
 }
 buildFuncionarios();
+
+const MAX_OUTROS_POR_FUNCIONARIO = 5;
+
+function attachEpiOutrosListener(input){
+  input.addEventListener('input', ()=>{
+    if(!input.value.trim()) return;
+    const funcIdx = input.dataset.func;
+    const outrosIdx = parseInt(input.dataset.outrosIdx, 10);
+    if(outrosIdx >= MAX_OUTROS_POR_FUNCIONARIO) return;
+    const nextIdx = outrosIdx + 1;
+    if(document.getElementById(`f${funcIdx}_outros_${nextIdx}`)) return; // já existe, não duplica
+
+    const currentRow = document.getElementById(`f${funcIdx}_outros_row_${outrosIdx}`);
+    currentRow.insertAdjacentHTML('afterend', `
+      <tr id="f${funcIdx}_outros_row_${nextIdx}">
+        <td class="item-label"></td>
+        <td colspan="3"><input type="text" class="epi-outros-input" id="f${funcIdx}_outros_${nextIdx}" data-func="${funcIdx}" data-outros-idx="${nextIdx}" placeholder="Opcional"></td>
+      </tr>`);
+    attachEpiOutrosListener(document.getElementById(`f${funcIdx}_outros_${nextIdx}`));
+  });
+}
 
 function showWarningModal(){
   document.getElementById('warningModal').classList.remove('hidden');
@@ -926,8 +950,12 @@ function collectFuncionarios(){
       const el = document.querySelector(`input[name="f${i}_${item.key}"]:checked`);
       entry[item.key] = el ? el.value : "";
     });
-    const outrosEl = document.getElementById(`f${i}_outros`);
-    entry.outros = outrosEl ? outrosEl.value.trim() : "";
+    const outrosValores = [];
+    document.querySelectorAll(`.epi-outros-input[data-func="${i}"]`).forEach(el=>{
+      const val = el.value.trim();
+      if(val) outrosValores.push(val);
+    });
+    entry.outros = outrosValores.join("; ");
     out.push(entry);
   }
   return out;
