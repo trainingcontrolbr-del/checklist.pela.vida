@@ -182,7 +182,21 @@
   .sub-list{padding:12px 20px 4px;color:var(--muted);font-size:12.5px;display:flex;align-items:center;gap:6px;}
   .sub-list svg{width:14px;height:14px;flex:none;color:var(--primary);}
 
-  #listContainer, #clientsContainer, #clientHistoryList{padding:8px 20px 4px;}
+  .date-filter-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:18px 20px 4px;}
+  .date-field{display:flex;flex-direction:column;gap:4px;}
+  .date-field label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+  .date-field input{
+    border:1px solid var(--border);border-radius:10px;padding:9px 10px;font-size:13px;
+    font-family:inherit;background:#fff;color:var(--text);height:38px;
+  }
+  .date-field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(47,111,237,.12);}
+  .date-filter-clear{
+    background:var(--row-alt);border:1px solid var(--border);color:var(--muted);
+    border-radius:10px;padding:0 14px;font-size:12.5px;font-weight:600;cursor:pointer;height:38px;
+  }
+  .date-filter-clear:hover{background:#eceff3;color:var(--primary);}
+
+  #listContainer, #clientsContainer, #clientHistoryList, #dateFilterContainer{padding:8px 20px 4px;}
 
   /* ============ CARTÕES DE CHECKLIST / CLIENTE ============ */
   .item-card, .client-card{
@@ -347,7 +361,7 @@
     .app-shell{flex-direction:row;}
     .sidebar{display:flex;}
     .mobile-nav{display:none;}
-    #listContainer, #clientsContainer, #clientHistoryList{
+    #listContainer, #clientsContainer, #clientHistoryList, #dateFilterContainer{
       display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;padding:8px 20px 4px;
     }
     .item-card, .client-card{margin:0;}
@@ -457,6 +471,10 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               Por cliente
             </button>
+            <button class="tab-btn" id="tabByDate">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Por data
+            </button>
           </div>
           <div class="search-row">
             <div class="search-wrap">
@@ -486,6 +504,25 @@
           <div class="dashboard-charts" id="dashboardCharts"></div>
           <div id="clientsContainer"></div>
           <div id="clientHistoryContainer" class="hidden"></div>
+        </div>
+
+        <div id="viewByDate" class="hidden">
+          <div class="date-filter-bar">
+            <div class="date-field">
+              <label for="dateFromInput">De</label>
+              <input type="date" id="dateFromInput">
+            </div>
+            <div class="date-field">
+              <label for="dateToInput">Até</label>
+              <input type="date" id="dateToInput">
+            </div>
+            <button type="button" class="date-filter-clear" id="dateFilterClear">Limpar</button>
+          </div>
+          <div class="sub-list" id="dateSubList">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            Escolha um período para filtrar, ou deixe em branco para ver tudo.
+          </div>
+          <div id="dateFilterContainer"></div>
         </div>
       </div>
 
@@ -622,6 +659,9 @@ function applyFilterAndRender(){
       renderClients();
     }
   }
+  if(!document.getElementById('viewByDate').classList.contains('hidden')){
+    renderDateFilter();
+  }
 }
 
 document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -669,16 +709,68 @@ async function verifyAdminPin(){
 /* ---------- Abas ---------- */
 document.getElementById('tabAll').addEventListener('click', ()=>switchTab('all'));
 document.getElementById('tabByClient').addEventListener('click', ()=>switchTab('clients'));
+document.getElementById('tabByDate').addEventListener('click', ()=>switchTab('date'));
 
 function switchTab(tab){
   document.getElementById('tabAll').classList.toggle('active', tab==='all');
   document.getElementById('tabByClient').classList.toggle('active', tab==='clients');
+  document.getElementById('tabByDate').classList.toggle('active', tab==='date');
   document.getElementById('viewAll').classList.toggle('hidden', tab!=='all');
   document.getElementById('viewClients').classList.toggle('hidden', tab!=='clients');
+  document.getElementById('viewByDate').classList.toggle('hidden', tab!=='date');
   if(tab === 'clients'){
     currentClient = null;
   }
   applyFilterAndRender();
+}
+
+/* ---------- Filtro por data ---------- */
+let dateFrom = "";
+let dateTo = "";
+
+document.getElementById('dateFromInput').addEventListener('change', (e) => {
+  dateFrom = e.target.value;
+  applyFilterAndRender();
+});
+document.getElementById('dateToInput').addEventListener('change', (e) => {
+  dateTo = e.target.value;
+  applyFilterAndRender();
+});
+document.getElementById('dateFilterClear').addEventListener('click', () => {
+  dateFrom = "";
+  dateTo = "";
+  document.getElementById('dateFromInput').value = "";
+  document.getElementById('dateToInput').value = "";
+  applyFilterAndRender();
+});
+
+function matchesDateRange_(item){
+  if(!dateFrom && !dateTo) return true;
+  const itemDate = new Date(item.timestamp);
+  if(dateFrom){
+    const from = new Date(dateFrom + "T00:00:00");
+    if(itemDate < from) return false;
+  }
+  if(dateTo){
+    const to = new Date(dateTo + "T23:59:59");
+    if(itemDate > to) return false;
+  }
+  return true;
+}
+
+function renderDateFilter(){
+  const items = getFilteredItems().filter(matchesDateRange_).sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
+  const subList = document.getElementById('dateSubList');
+  if(dateFrom || dateTo){
+    subList.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      ${items.length} checklist(s) no período selecionado.`;
+  } else {
+    subList.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      Escolha um período para filtrar, ou deixe em branco para ver tudo.`;
+  }
+  renderList(items, document.getElementById('dateFilterContainer'), 'Nenhum checklist nesse período.');
 }
 
 /* ---------- Lista ---------- */
