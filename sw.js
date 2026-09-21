@@ -1,4 +1,4 @@
-const CACHE_NAME = "checklist-pela-vida-v5";
+const CACHE_NAME = "checklist-pela-vida-v6";
 
 const APP_SHELL = [
   "./manifest.json",
