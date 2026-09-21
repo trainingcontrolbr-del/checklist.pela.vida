@@ -51,6 +51,17 @@
   .btn:hover{background:var(--primary-dark);}
   .btn:disabled{opacity:.6;cursor:default;}
   .btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--primary);}
+  .btn-danger-outline{background:#fff;color:var(--nok);border:1.5px solid var(--nok);}
+  .btn-danger-outline:hover{background:#fbe9e7;}
+
+  .confirm-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
+  .confirm-modal-overlay.hidden{display:none;}
+  .confirm-modal{background:#fff;border-radius:16px;max-width:380px;width:100%;padding:26px 24px 22px;box-shadow:0 20px 50px rgba(0,0,0,.25);}
+  .confirm-modal h3{margin:0 0 10px;font-size:17px;color:var(--text);display:flex;align-items:center;gap:8px;}
+  .confirm-modal h3 svg{width:20px;height:20px;color:var(--nok);flex-shrink:0;}
+  .confirm-modal p{margin:0 0 20px;font-size:14px;color:var(--muted);line-height:1.5;}
+  .confirm-modal-actions{display:flex;gap:10px;}
+  .confirm-modal-actions .btn{flex:1;padding:11px;font-size:14px;}
   .pin-error{color:var(--nok);font-size:13px;margin-top:10px;min-height:16px;}
 
   /* ============ APP SHELL (sidebar + conteúdo) ============ */
@@ -581,6 +592,7 @@
 
         <div class="submit-wrap">
           <button class="btn" id="backBtn2">← Voltar para a lista</button>
+          <button class="btn btn-danger-outline" id="deleteBtn" type="button">Excluir checklist</button>
         </div>
         <div class="status-msg" id="viewStatus" style="padding:0 20px 30px;"></div>
       </div>
@@ -588,6 +600,21 @@
     </div>
   </div>
 
+</div>
+
+<!-- ============ MODAL DE CONFIRMAÇÃO DE EXCLUSÃO ============ -->
+<div class="confirm-modal-overlay hidden" id="deleteConfirmOverlay">
+  <div class="confirm-modal">
+    <h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Excluir checklist?
+    </h3>
+    <p>Essa ação é permanente e não pode ser desfeita. O checklist e suas fotos serão removidos do sistema.</p>
+    <div class="confirm-modal-actions">
+      <button class="btn btn-outline" id="deleteCancelBtn" type="button">Cancelar</button>
+      <button class="btn" id="deleteConfirmBtn" type="button" style="background:var(--nok);">Excluir</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1265,6 +1292,53 @@ function backToList(){
   document.getElementById('listScreen').classList.remove('hidden');
   currentId = null;
 }
+
+/* ---------- Excluir checklist ---------- */
+document.getElementById('deleteBtn').addEventListener('click', () => {
+  document.getElementById('deleteConfirmOverlay').classList.remove('hidden');
+});
+document.getElementById('deleteCancelBtn').addEventListener('click', () => {
+  document.getElementById('deleteConfirmOverlay').classList.add('hidden');
+});
+document.getElementById('deleteConfirmOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'deleteConfirmOverlay') document.getElementById('deleteConfirmOverlay').classList.add('hidden');
+});
+
+document.getElementById('deleteConfirmBtn').addEventListener('click', async () => {
+  if(!currentId) return;
+  const confirmBtn = document.getElementById('deleteConfirmBtn');
+  const idToDelete = currentId;
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "Excluindo...";
+  try{
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "deleteSubmission", adminPin, id: idToDelete })
+    });
+    const data = await res.json();
+    document.getElementById('deleteConfirmOverlay').classList.add('hidden');
+    if(!data.ok){
+      document.getElementById('viewStatus').textContent = data.message || "Erro ao excluir o checklist.";
+      document.getElementById('viewStatus').className = "status-msg err";
+      return;
+    }
+    // Remove da lista local também, sem esperar novo carregamento
+    allItems = allItems.filter(i => i.id !== idToDelete);
+    unreadItems = unreadItems.filter(i => i.id !== idToDelete);
+    updateNotifBadge();
+    backToList();
+    applyFilterAndRender();
+    showToast(ICON_CHECK, 'Checklist excluído', 'O registro foi removido com sucesso.', null);
+  }catch(err){
+    document.getElementById('deleteConfirmOverlay').classList.add('hidden');
+    document.getElementById('viewStatus').textContent = "Erro de conexão ao excluir.";
+    document.getElementById('viewStatus').className = "status-msg err";
+  }finally{
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "Excluir";
+  }
+});
 
 /* ---------- PWA: registra o service worker ---------- */
 if ('serviceWorker' in navigator) {
