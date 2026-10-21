@@ -102,7 +102,7 @@
   }
   .mobile-nav .nav-item{
     flex:none;white-space:nowrap;color:rgba(255,255,255,.85);padding:8px 13px;border-radius:20px;
-    background:rgba(255,255,255,.1);font-size:12.5px;
+    background:rgba(255,255,255,.1);font-size:12.5px;width:auto;
   }
   .mobile-nav .nav-item svg{width:14px;height:14px;}
   .mobile-nav .nav-item.active{background:#fff;color:var(--header-dark);}
@@ -366,6 +366,90 @@
   .toast .toast-view{background:#3c2a06;color:#fff;}
   .toast .toast-dismiss{background:rgba(60,42,6,.12);color:#3c2a06;}
 
+  /* ============ VISITAS TÉCNICAS ============ */
+  .stat-card.stat-red{border-left-color:var(--nok);}
+  .stat-card.stat-red .stat-icon{background:#fbe9e7;color:var(--nok);}
+  .stat-card.stat-amber{border-left-color:var(--accent-dark);}
+  .stat-card.stat-amber .stat-icon{background:#fff2e0;color:var(--accent-dark);}
+
+  .visitas-form-card{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    margin:20px 20px 0;padding:18px;box-shadow:0 1px 3px rgba(16,24,40,.05);
+  }
+  .visitas-form-title{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:var(--text);margin:0 0 4px;}
+  .visitas-form-title .chart-title-icon{background:var(--primary-light);color:var(--primary);}
+  .visitas-form-help{font-size:12.5px;color:var(--muted);margin:0 0 16px;line-height:1.5;}
+
+  .week-picker{display:flex;align-items:center;gap:8px;}
+  .week-arrow{
+    flex:none;width:40px;height:44px;border-radius:10px;border:1px solid var(--border);background:var(--row-alt);
+    color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+  .week-arrow:hover{background:#eceff3;color:var(--primary);}
+  .week-display{
+    flex:1;min-width:0;text-align:center;border:1px solid var(--border);border-radius:10px;
+    padding:6px 10px;background:#fff;min-height:44px;display:flex;flex-direction:column;justify-content:center;
+  }
+  .week-display strong{font-size:14px;color:var(--text);}
+  .week-display small{font-size:11.5px;color:var(--muted);}
+  .week-jump{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--muted);flex-wrap:wrap;}
+  .week-jump input{border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:12.5px;font-family:inherit;color:var(--text);}
+  .week-jump button{background:none;border:none;color:var(--primary);font-weight:700;font-size:12px;cursor:pointer;padding:4px;}
+
+  .visitas-inputs{display:flex;gap:12px;margin-top:16px;align-items:flex-end;flex-wrap:wrap;}
+  .visitas-inputs .date-field{flex:1;min-width:140px;}
+  .visitas-inputs input[type=number]{
+    border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:18px;font-weight:700;
+    font-family:inherit;width:100%;height:44px;color:var(--text);
+  }
+  .visitas-inputs input[type=number]:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(47,111,237,.12);}
+  .visitas-preview{
+    flex:1;min-width:120px;height:44px;border-radius:10px;background:var(--row-alt);border:1px dashed var(--border);
+    display:flex;align-items:center;justify-content:center;gap:8px;font-size:11px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.3px;font-weight:700;line-height:1.2;padding:0 8px;text-align:center;
+  }
+  .visitas-preview b{font-size:20px;color:var(--text);letter-spacing:0;}
+  .visitas-actions{display:flex;gap:10px;margin-top:14px;}
+  .visitas-actions .btn{flex:1;padding:12px;font-size:14px;}
+  .visitas-msg{font-size:12.5px;margin-top:10px;min-height:16px;text-align:center;}
+  .visitas-msg.ok{color:var(--ok);}
+  .visitas-msg.err{color:var(--nok);}
+
+  #visitasList{padding:8px 20px 30px;}
+  .week-card{
+    background:var(--card);border:1px solid var(--border);border-left:4px solid var(--border);border-radius:14px;
+    padding:16px;margin:0 0 12px;box-shadow:0 1px 2px rgba(16,24,40,.04);
+  }
+  .week-card.st-ok{border-left-color:var(--ok);}
+  .week-card.st-pend{border-left-color:var(--nok);}
+  .week-card.st-andamento{border-left-color:var(--accent-dark);}
+  .week-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  .week-card-range{font-size:14px;font-weight:700;color:var(--text);margin:0;}
+  .week-card-days{font-size:11.5px;color:var(--muted);margin:2px 0 0;}
+  .status-badge{font-size:11.5px;font-weight:700;padding:5px 10px;border-radius:20px;flex:none;white-space:nowrap;}
+  .status-badge.ok{background:#e5f3ea;color:var(--ok);}
+  .status-badge.pend{background:#fbe9e7;color:var(--nok);}
+  .status-badge.andamento{background:#fff2e0;color:var(--accent-dark);}
+  .week-numbers{display:flex;gap:10px;margin:14px 0 10px;}
+  .week-num{flex:1;background:var(--row-alt);border-radius:10px;padding:8px 10px;text-align:center;}
+  .week-num b{display:block;font-size:20px;color:var(--text);line-height:1.2;}
+  .week-num span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;}
+  .week-num.pend b{color:var(--nok);}
+  .week-num.ok b{color:var(--ok);}
+  .progress-track{background:var(--row-alt);border-radius:6px;height:8px;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:6px;background:var(--ok);transition:width .3s ease;}
+  .week-card.st-pend .progress-fill{background:var(--nok);}
+  .week-card.st-andamento .progress-fill{background:var(--accent-dark);}
+  .week-card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;}
+  .week-card-foot small{font-size:11.5px;color:var(--muted);}
+  .week-card-actions{display:flex;gap:6px;flex:none;}
+  .mini-btn{
+    background:var(--row-alt);border:1px solid var(--border);border-radius:8px;padding:6px 10px;
+    font-size:12px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;
+  }
+  .mini-btn:hover{border-color:var(--primary);color:var(--primary);}
+  .mini-btn.danger:hover{border-color:var(--nok);color:var(--nok);}
+
   /* ============ DESKTOP (≥860px): sidebar fixa + grades ============ */
   @media (min-width: 860px){
     .pin-screen{ justify-content:flex-start; padding-left:8vw; }
@@ -376,6 +460,9 @@
       display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;padding:8px 20px 4px;
     }
     .item-card, .client-card{margin:0;}
+    #visitasList{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:12px;align-items:start;}
+    .week-card{margin:0;}
+    .visitas-form-card{max-width:720px;}
     .dashboard-stats{flex-wrap:nowrap;}
     .dashboard-charts{flex-wrap:nowrap;}
     #identificacaoContainer{
@@ -418,13 +505,17 @@
         <div class="brand-text">Checklist<small>pela Vida</small></div>
       </div>
       <nav class="sidebar-nav">
-        <button type="button" class="nav-item active">
+        <button type="button" class="nav-item active" data-nav="checklists" onclick="goToSection('checklists')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
           Checklists enviados
         </button>
-        <button type="button" class="nav-item" onclick="switchTab('clients')">
+        <button type="button" class="nav-item" data-nav="clients" onclick="goToSection('clients')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Clientes
+        </button>
+        <button type="button" class="nav-item" data-nav="visitas" onclick="goToSection('visitas')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>
+          Visitas Técnicas
         </button>
       </nav>
       <div class="sidebar-footer">
@@ -434,13 +525,17 @@
     </aside>
 
     <nav class="mobile-nav">
-      <button type="button" class="nav-item active">
+      <button type="button" class="nav-item active" data-nav="checklists" onclick="goToSection('checklists')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
         Checklists
       </button>
-      <button type="button" class="nav-item" onclick="switchTab('clients')">
+      <button type="button" class="nav-item" data-nav="clients" onclick="goToSection('clients')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Clientes
+      </button>
+      <button type="button" class="nav-item" data-nav="visitas" onclick="goToSection('visitas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>
+        Visitas
       </button>
     </nav>
 
@@ -555,7 +650,7 @@
             <p id="viewCliente">—</p>
           </div>
           <div class="view-meta-field">
-            <label>Estação</label>
+            <label>Estação(ões)</label>
             <p id="viewEstacao">—</p>
           </div>
           <div class="view-meta-field">
@@ -597,6 +692,67 @@
         <div class="status-msg" id="viewStatus" style="padding:0 20px 30px;"></div>
       </div>
 
+      <!-- ============ VISITAS TÉCNICAS ============ -->
+      <div id="visitasScreen" class="hidden">
+        <div class="header">
+          <img class="shield" src="icons/icon-192.png" alt="Checklist Pela Vida">
+          <div class="header-titles">
+            <h1>Visitas Técnicas</h1>
+            <p class="header-sub">Compare as visitas da semana com os checklists enviados</p>
+          </div>
+          <div class="header-actions">
+            <button class="refresh-btn" id="visitasRefreshBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Atualizar
+            </button>
+          </div>
+        </div>
+
+        <div class="visitas-form-card">
+          <p class="visitas-form-title">
+            <span class="chart-title-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+            Registrar visitas da semana
+          </p>
+          <p class="visitas-form-help">Escolha a semana (segunda a domingo) e informe quantas visitas técnicas aconteceram. Cada visita deve ter <b>1 checklist</b> enviado.</p>
+
+          <div class="week-picker">
+            <button type="button" class="week-arrow" id="weekPrevBtn" title="Semana anterior" aria-label="Semana anterior">‹</button>
+            <div class="week-display">
+              <strong id="weekLabel">—</strong>
+              <small id="weekSubLabel">segunda a domingo</small>
+            </div>
+            <button type="button" class="week-arrow" id="weekNextBtn" title="Próxima semana" aria-label="Próxima semana">›</button>
+          </div>
+          <div class="week-jump">
+            <label for="weekJumpInput">Ir para a semana do dia:</label>
+            <input type="date" id="weekJumpInput">
+            <button type="button" id="weekTodayBtn">Semana atual</button>
+          </div>
+
+          <div class="visitas-inputs">
+            <div class="date-field">
+              <label for="visitasQtdInput">Visitas técnicas</label>
+              <input type="number" id="visitasQtdInput" min="0" max="999" step="1" inputmode="numeric" placeholder="0">
+            </div>
+            <div class="visitas-preview" title="Checklists enviados nesta semana">
+              <span>Checklists<br>na semana</span><b id="weekChecklistCount">0</b>
+            </div>
+          </div>
+
+          <div class="visitas-actions">
+            <button type="button" class="btn" id="visitasSaveBtn">Salvar</button>
+          </div>
+          <div class="visitas-msg" id="visitasMsg"></div>
+        </div>
+
+        <div class="dashboard-stats" id="visitasStats"></div>
+        <div class="sub-list">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Semanas registradas, da mais recente para a mais antiga.
+        </div>
+        <div id="visitasList"><p class="empty-msg">Carregando...</p></div>
+      </div>
+
     </div>
   </div>
 
@@ -613,6 +769,21 @@
     <div class="confirm-modal-actions">
       <button class="btn btn-outline" id="deleteCancelBtn" type="button">Cancelar</button>
       <button class="btn" id="deleteConfirmBtn" type="button" style="background:var(--nok);">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL DE CONFIRMAÇÃO — APAGAR SEMANA DE VISITAS ============ -->
+<div class="confirm-modal-overlay hidden" id="visitaConfirmOverlay">
+  <div class="confirm-modal">
+    <h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Apagar registro da semana?
+    </h3>
+    <p id="visitaConfirmText">O número de visitas desta semana será apagado. Os checklists enviados não são afetados.</p>
+    <div class="confirm-modal-actions">
+      <button class="btn btn-outline" id="visitaCancelBtn" type="button">Cancelar</button>
+      <button class="btn" id="visitaConfirmBtn" type="button" style="background:var(--nok);">Apagar</button>
     </div>
   </div>
 </div>
@@ -690,6 +861,10 @@ function applyFilterAndRender(){
   if(!document.getElementById('viewByDate').classList.contains('hidden')){
     renderDateFilter();
   }
+  // Novos checklists mudam a contagem das semanas — atualiza a aba Visitas se estiver aberta
+  if(!document.getElementById('visitasScreen').classList.contains('hidden')){
+    renderVisitas();
+  }
 }
 
 document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -749,6 +924,9 @@ function switchTab(tab){
   if(tab === 'clients'){
     currentClient = null;
   }
+  // Mantém o menu lateral/superior sincronizado com a aba escolhida
+  currentSection = tab === 'clients' ? 'clients' : 'checklists';
+  setNavActive_(currentSection);
   applyFilterAndRender();
 }
 
@@ -1195,6 +1373,11 @@ function showToast(icon, title, sub, id){
 /* ---------- Abrir e visualizar um checklist (somente leitura) ---------- */
 async function openSubmission(id){
   currentId = id;
+  const visitasScreen = document.getElementById('visitasScreen');
+  if(!visitasScreen.classList.contains('hidden')){
+    returnToVisitas = true;
+    visitasScreen.classList.add('hidden');
+  }
   document.getElementById('listScreen').classList.add('hidden');
   document.getElementById('viewScreen').classList.remove('hidden');
   document.getElementById('viewStatus').textContent = "Carregando registro...";
@@ -1289,6 +1472,7 @@ function renderSubmission(sub){
 document.getElementById('backBtn').addEventListener('click', backToList);
 document.getElementById('backBtn2').addEventListener('click', backToList);
 function backToList(){
+  if(returnToVisitas){ goToSection('visitas'); return; }
   document.getElementById('viewScreen').classList.add('hidden');
   document.getElementById('listScreen').classList.remove('hidden');
   currentId = null;
@@ -1338,6 +1522,323 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', async () =
   }finally{
     confirmBtn.disabled = false;
     confirmBtn.textContent = "Excluir";
+  }
+});
+
+/* =====================================================================
+   NAVEGAÇÃO ENTRE SEÇÕES (Checklists · Clientes · Visitas Técnicas)
+   ===================================================================== */
+let currentSection = 'checklists';
+let returnToVisitas = false; // se abriu um checklist estando na aba Visitas
+
+function setNavActive_(sec){
+  document.querySelectorAll('.nav-item[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === sec));
+}
+
+function goToSection(sec){
+  currentSection = sec;
+  setNavActive_(sec);
+  document.getElementById('viewScreen').classList.add('hidden');
+  currentId = null;
+  returnToVisitas = false;
+  if(sec === 'visitas'){
+    document.getElementById('listScreen').classList.add('hidden');
+    document.getElementById('visitasScreen').classList.remove('hidden');
+    renderVisitas();
+    if(!visitasLoaded) loadVisitas();
+  } else {
+    document.getElementById('visitasScreen').classList.add('hidden');
+    document.getElementById('listScreen').classList.remove('hidden');
+    switchTab(sec === 'clients' ? 'clients' : 'all');
+  }
+  window.scrollTo(0, 0);
+}
+
+/* =====================================================================
+   VISITAS TÉCNICAS
+   Semana = segunda-feira 00:00 até domingo 23:59 (7 dias).
+   Regra: cada visita técnica precisa de 1 checklist enviado na semana.
+   ===================================================================== */
+let visitasData = [];        // [{inicio:'2026-10-12', fim:'2026-10-18', visitas:5}]
+let visitasLoaded = false;
+let selectedWeek = null;     // segunda-feira da semana escolhida, em 'aaaa-mm-dd'
+let visitaToDelete = null;
+
+// --- utilitários de data (sempre no horário local do aparelho) ---
+function pad2_(n){ return String(n).padStart(2, '0'); }
+function isoOf_(d){ return d.getFullYear() + '-' + pad2_(d.getMonth() + 1) + '-' + pad2_(d.getDate()); }
+function parseIso_(s){ const p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+function addDays_(d, n){ const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + n); return x; }
+function mondayOf_(d){
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diasDesdeSegunda = (x.getDay() + 6) % 7; // segunda=0 ... domingo=6
+  x.setDate(x.getDate() - diasDesdeSegunda);
+  return x;
+}
+function fmtBR_(d){ return pad2_(d.getDate()) + '/' + pad2_(d.getMonth() + 1) + '/' + d.getFullYear(); }
+function currentWeekIso_(){ return isoOf_(mondayOf_(new Date())); }
+function weekRangeLabel_(inicioIso){
+  const ini = parseIso_(inicioIso);
+  return fmtBR_(ini) + ' a ' + fmtBR_(addDays_(ini, 6));
+}
+
+// Conta os checklists enviados entre segunda 00:00 e o domingo seguinte 23:59
+function countChecklistsInWeek_(inicioIso){
+  const ini = parseIso_(inicioIso);
+  const fim = addDays_(ini, 7);
+  return allItems.filter(it => {
+    const t = new Date(it.timestamp);
+    return t >= ini && t < fim;
+  }).length;
+}
+
+// Calcula o indicador de uma semana
+function weekStatus_(inicioIso, visitas){
+  const checklists = countChecklistsInWeek_(inicioIso);
+  const pendentes = Math.max(0, visitas - checklists);
+  const extras = Math.max(0, checklists - visitas);
+  const semanaAcabou = new Date() >= addDays_(parseIso_(inicioIso), 7);
+  let status, badge;
+  if(pendentes === 0){
+    status = 'ok';
+    badge = '✔ De acordo';
+  } else if(!semanaAcabou){
+    status = 'andamento';
+    badge = '⏳ Em andamento · faltam ' + pendentes;
+  } else {
+    status = 'pend';
+    badge = '⚠ ' + pendentes + (pendentes === 1 ? ' checklist pendente' : ' checklists pendentes');
+  }
+  const pct = visitas > 0 ? Math.min(100, Math.round(checklists / visitas * 100)) : 100;
+  return { checklists, pendentes, extras, status, badge, pct, semanaAcabou };
+}
+
+function findVisita_(inicioIso){ return visitasData.find(v => v.inicio === inicioIso) || null; }
+
+// --- carregar do servidor ---
+async function loadVisitas(){
+  const list = document.getElementById('visitasList');
+  if(!visitasLoaded) list.innerHTML = '<p class="empty-msg">Carregando...</p>';
+  try{
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "listVisitas", adminPin })
+    });
+    const data = await res.json();
+    if(!data.ok){
+      list.innerHTML = `<p class="empty-msg">${escapeHtml(data.message || 'Erro ao carregar as visitas.')}</p>`;
+      return;
+    }
+    visitasData = data.items || [];
+    visitasLoaded = true;
+    selectWeek_(selectedWeek || currentWeekIso_()); // atualiza o campo com o valor salvo
+    renderVisitas();
+  }catch(err){
+    list.innerHTML = '<p class="empty-msg">Erro de conexão ao carregar as visitas.</p>';
+  }
+}
+
+// --- formulário: escolher a semana ---
+function selectWeek_(inicioIso){
+  const atual = currentWeekIso_();
+  if(inicioIso > atual) inicioIso = atual; // não deixa registrar semanas futuras
+  selectedWeek = inicioIso;
+  const reg = findVisita_(inicioIso);
+  document.getElementById('visitasQtdInput').value = reg ? reg.visitas : '';
+  document.getElementById('weekJumpInput').value = '';
+  setVisitasMsg_('', '');
+  updateWeekForm_();
+}
+
+function updateWeekForm_(){
+  if(!selectedWeek) selectedWeek = currentWeekIso_();
+  const atual = currentWeekIso_();
+  document.getElementById('weekLabel').textContent = weekRangeLabel_(selectedWeek);
+  document.getElementById('weekSubLabel').textContent =
+    'segunda a domingo' + (selectedWeek === atual ? ' · semana atual' : '');
+  document.getElementById('weekNextBtn').disabled = selectedWeek >= atual;
+  document.getElementById('weekNextBtn').style.opacity = selectedWeek >= atual ? '.4' : '1';
+  document.getElementById('weekChecklistCount').textContent = countChecklistsInWeek_(selectedWeek);
+  document.getElementById('visitasSaveBtn').textContent = findVisita_(selectedWeek) ? 'Atualizar semana' : 'Salvar';
+}
+
+function setVisitasMsg_(text, cls){
+  const el = document.getElementById('visitasMsg');
+  el.textContent = text;
+  el.className = 'visitas-msg' + (cls ? ' ' + cls : '');
+}
+
+document.getElementById('weekPrevBtn').addEventListener('click', () => {
+  selectWeek_(isoOf_(addDays_(parseIso_(selectedWeek), -7)));
+});
+document.getElementById('weekNextBtn').addEventListener('click', () => {
+  selectWeek_(isoOf_(addDays_(parseIso_(selectedWeek), 7)));
+});
+document.getElementById('weekTodayBtn').addEventListener('click', () => selectWeek_(currentWeekIso_()));
+document.getElementById('weekJumpInput').addEventListener('change', (e) => {
+  if(e.target.value) selectWeek_(isoOf_(mondayOf_(parseIso_(e.target.value))));
+});
+document.getElementById('visitasQtdInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') saveVisitas();
+});
+document.getElementById('visitasSaveBtn').addEventListener('click', saveVisitas);
+document.getElementById('visitasRefreshBtn').addEventListener('click', () => { loadVisitas(); loadList(); });
+
+// --- salvar ---
+async function saveVisitas(){
+  const raw = document.getElementById('visitasQtdInput').value.trim();
+  const qtd = Number(raw);
+  if(raw === '' || !Number.isInteger(qtd) || qtd < 0 || qtd > 999){
+    setVisitasMsg_('Informe a quantidade de visitas (número inteiro de 0 a 999).', 'err');
+    document.getElementById('visitasQtdInput').focus();
+    return;
+  }
+  const btn = document.getElementById('visitasSaveBtn');
+  const semana = selectedWeek;
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  setVisitasMsg_('', '');
+  try{
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "saveVisitas", adminPin, inicio: semana, visitas: qtd })
+    });
+    const data = await res.json();
+    if(!data.ok){
+      setVisitasMsg_(data.message || 'Não foi possível salvar.', 'err');
+    } else {
+      const existente = findVisita_(semana);
+      if(existente){ existente.visitas = qtd; }
+      else { visitasData.push({ inicio: semana, fim: isoOf_(addDays_(parseIso_(semana), 6)), visitas: qtd }); }
+      visitasData.sort((a, b) => a.inicio < b.inicio ? 1 : -1);
+      renderVisitas();
+      setVisitasMsg_('Semana de ' + weekRangeLabel_(semana) + ' salva com ' + qtd + (qtd === 1 ? ' visita.' : ' visitas.'), 'ok');
+    }
+  }catch(err){
+    setVisitasMsg_('Erro de conexão. Tente novamente.', 'err');
+  }
+  btn.disabled = false;
+  updateWeekForm_();
+}
+
+// --- desenhar indicadores e lista de semanas ---
+function renderVisitas(){
+  if(!selectedWeek) selectedWeek = currentWeekIso_();
+  updateWeekForm_();
+  const statsEl = document.getElementById('visitasStats');
+  const list = document.getElementById('visitasList');
+  if(!visitasLoaded) return;
+
+  if(visitasData.length === 0){
+    statsEl.innerHTML = '';
+    list.innerHTML = '<p class="empty-msg">Nenhuma semana registrada ainda. Use o formulário acima para lançar as visitas da semana.</p>';
+    return;
+  }
+
+  let totVisitas = 0, totChecklists = 0, totPendentes = 0, fechadas = 0, fechadasOk = 0;
+  const cards = visitasData.map(v => {
+    const st = weekStatus_(v.inicio, v.visitas);
+    totVisitas += v.visitas;
+    totChecklists += st.checklists;
+    totPendentes += st.pendentes;
+    if(st.semanaAcabou){ fechadas++; if(st.status === 'ok') fechadasOk++; }
+    const ini = parseIso_(v.inicio);
+    const nota = st.extras > 0
+      ? `+${st.extras} checklist(s) além do número de visitas`
+      : (st.status === 'ok' ? 'Todas as visitas com checklist' : `${st.pct}% das visitas com checklist`);
+    return `
+    <div class="week-card st-${st.status}">
+      <div class="week-card-head">
+        <div>
+          <p class="week-card-range">${weekRangeLabel_(v.inicio)}</p>
+          <p class="week-card-days">Segunda ${pad2_(ini.getDate())}/${pad2_(ini.getMonth() + 1)} a domingo</p>
+        </div>
+        <span class="status-badge ${st.status}">${st.badge}</span>
+      </div>
+      <div class="week-numbers">
+        <div class="week-num"><b>${v.visitas}</b><span>Visitas</span></div>
+        <div class="week-num"><b>${st.checklists}</b><span>Checklists</span></div>
+        <div class="week-num ${st.pendentes > 0 ? 'pend' : 'ok'}"><b>${st.pendentes}</b><span>Pendentes</span></div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${st.pct}%"></div></div>
+      <div class="week-card-foot">
+        <small>${nota}</small>
+        <div class="week-card-actions">
+          <button type="button" class="mini-btn" onclick="editVisita('${v.inicio}')">Editar</button>
+          <button type="button" class="mini-btn danger" onclick="askDeleteVisita('${v.inicio}')">Apagar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  statsEl.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-icon">${ICON_CALENDAR}</div>
+      <div class="stat-body"><div class="stat-value">${totVisitas}</div><div class="stat-label">Visitas registradas</div></div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-icon">${ICON_CHECK}</div>
+      <div class="stat-body"><div class="stat-value">${totChecklists}</div><div class="stat-label">Checklists nessas semanas</div></div>
+    </div>
+    <div class="stat-card ${totPendentes > 0 ? 'stat-red' : 'stat-green'}">
+      <div class="stat-icon">${ICON_CHECK}</div>
+      <div class="stat-body"><div class="stat-value">${totPendentes}</div><div class="stat-label">Checklists pendentes</div></div>
+    </div>
+    <div class="stat-card stat-purple">
+      <div class="stat-icon">${ICON_CALENDAR}</div>
+      <div class="stat-body"><div class="stat-value">${fechadasOk} de ${fechadas}</div><div class="stat-label">Semanas encerradas em dia</div></div>
+    </div>`;
+  list.innerHTML = cards;
+}
+
+function editVisita(inicioIso){
+  selectWeek_(inicioIso);
+  document.querySelector('.visitas-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => document.getElementById('visitasQtdInput').focus(), 300);
+}
+
+// --- apagar uma semana ---
+function askDeleteVisita(inicioIso){
+  visitaToDelete = inicioIso;
+  document.getElementById('visitaConfirmText').textContent =
+    'O número de visitas da semana de ' + weekRangeLabel_(inicioIso) + ' será apagado. Os checklists enviados não são afetados.';
+  document.getElementById('visitaConfirmOverlay').classList.remove('hidden');
+}
+function closeVisitaConfirm_(){
+  document.getElementById('visitaConfirmOverlay').classList.add('hidden');
+  visitaToDelete = null;
+}
+document.getElementById('visitaCancelBtn').addEventListener('click', closeVisitaConfirm_);
+document.getElementById('visitaConfirmOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'visitaConfirmOverlay') closeVisitaConfirm_();
+});
+document.getElementById('visitaConfirmBtn').addEventListener('click', async () => {
+  if(!visitaToDelete) return;
+  const semana = visitaToDelete;
+  const btn = document.getElementById('visitaConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Apagando...';
+  try{
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "deleteVisitas", adminPin, inicio: semana })
+    });
+    const data = await res.json();
+    closeVisitaConfirm_();
+    if(!data.ok){
+      setVisitasMsg_(data.message || 'Não foi possível apagar.', 'err');
+    } else {
+      visitasData = visitasData.filter(v => v.inicio !== semana);
+      if(selectedWeek === semana) document.getElementById('visitasQtdInput').value = '';
+      renderVisitas();
+      showToast(ICON_CHECK, 'Semana apagada', 'Registro de ' + weekRangeLabel_(semana) + ' removido.', null);
+    }
+  }catch(err){
+    closeVisitaConfirm_();
+    setVisitasMsg_('Erro de conexão ao apagar.', 'err');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Apagar';
   }
 });
 
