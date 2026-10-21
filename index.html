@@ -197,8 +197,22 @@
 
   .meta-header{
     display:flex;gap:10px;padding:14px 20px;background:var(--row-alt);
-    border-bottom:1px solid var(--border);
+    border-bottom:1px solid var(--border);align-items:flex-start;
   }
+  /* Várias estações na mesma visita */
+  .estacao-row{display:flex;gap:6px;align-items:center;margin-top:6px;}
+  .estacao-row:first-child{margin-top:0;}
+  .estacao-row input{flex:1;min-width:0;}
+  .estacao-remove{
+    flex:none;width:34px;height:38px;border:1px solid var(--border);border-radius:8px;
+    background:#fff;color:var(--nok);font-size:18px;line-height:1;cursor:pointer;
+  }
+  .estacao-remove:hover{background:#fdecea;}
+  .add-estacao-btn{
+    margin-top:8px;width:100%;background:#fff;border:1px dashed var(--teal);color:var(--teal);
+    border-radius:8px;padding:8px 10px;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;
+  }
+  .add-estacao-btn:hover{background:#eaf4f5;}
   .meta-field{flex:1;}
   .meta-field .field-error-text{margin:5px 0 0;}
   .meta-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
@@ -430,7 +444,12 @@
       </div>
       <div class="meta-field">
         <label for="estacaoInput">Estação</label>
-        <input type="text" id="estacaoInput" placeholder="Nome da estação">
+        <div id="estacoesList">
+          <div class="estacao-row">
+            <input type="text" class="estacao-input" id="estacaoInput" placeholder="Nome da estação">
+          </div>
+        </div>
+        <button type="button" class="add-estacao-btn" id="addEstacaoBtn">+ Adicionar estação</button>
       </div>
     </div>
 
@@ -1000,17 +1019,23 @@ function validateChecklist(){
   let hasError = false;
   const flagFirst = el => { hasError = true; if(!firstError) firstError = el; };
 
-  // Cabeçalho — Cliente e Estação
+  // Cabeçalho — Cliente e Estação(ões)
   const clienteInput = document.getElementById('clienteInput');
-  const estacaoInput = document.getElementById('estacaoInput');
   if(!clienteInput.value.trim()){
     addError(clienteInput, 'Informe o cliente.');
     flagFirst(clienteInput);
   }
-  if(!estacaoInput.value.trim()){
-    addError(estacaoInput, 'Informe a estação.');
-    flagFirst(estacaoInput);
-  }
+  document.querySelectorAll('.estacao-input').forEach((input, idx)=>{
+    if(!input.value.trim()){
+      addError(input, idx === 0 ? 'Informe a estação.' : 'Preencha esta estação ou remova (✕).');
+      // A mensagem fica embaixo da linha inteira (campo + ✕), e não entre os dois
+      const row = input.closest('.estacao-row');
+      if(input.nextElementSibling && input.nextElementSibling.classList.contains('field-error-text')){
+        row.after(input.nextElementSibling);
+      }
+      flagFirst(input);
+    }
+  });
 
   // 1. APR — exige ao menos uma foto
   if(aprPhotos.length === 0){
@@ -1127,7 +1152,8 @@ async function submitChecklist(){
     action: "submit",
     pin: sessionPin,
     cliente: document.getElementById('clienteInput').value.trim(),
-    estacao: document.getElementById('estacaoInput').value.trim(),
+    estacao: getEstacoes().join(', '),
+    estacoes: getEstacoes(),
     identificacao,
     funcionarios: collectFuncionarios(),
     aprPhotos: aprPhotos.map(p=>({ name: p.name, dataUrl: p.dataUrl })),
@@ -1162,7 +1188,7 @@ async function submitChecklist(){
 
 document.getElementById('newChecklistBtn').addEventListener('click', ()=>{
   document.getElementById('clienteInput').value = "";
-  document.getElementById('estacaoInput').value = "";
+  resetEstacoes();
   buildIdentificacao();
   buildFuncionarios();
   buildOutrosPanel();
@@ -1180,6 +1206,56 @@ document.getElementById('newChecklistBtn').addEventListener('click', ()=>{
   document.getElementById('formScreen').classList.remove('hidden');
   window.scrollTo(0,0);
 });
+
+/* ---------- Estações: uma visita pode passar por mais de uma ---------- */
+const MAX_ESTACOES = 10;
+
+function getEstacoes(){
+  // Lista sem campos vazios e sem nomes repetidos (ignora maiúsculas/minúsculas)
+  const vistos = new Set();
+  const lista = [];
+  document.querySelectorAll('.estacao-input').forEach(input=>{
+    const v = input.value.trim();
+    const chave = v.toLowerCase();
+    if(v && !vistos.has(chave)){ vistos.add(chave); lista.push(v); }
+  });
+  return lista;
+}
+
+function updateAddEstacaoBtn(){
+  const total = document.querySelectorAll('.estacao-input').length;
+  document.getElementById('addEstacaoBtn').classList.toggle('hidden', total >= MAX_ESTACOES);
+}
+
+function addEstacaoRow(){
+  const list = document.getElementById('estacoesList');
+  const row = document.createElement('div');
+  row.className = 'estacao-row';
+  row.innerHTML = `
+    <input type="text" class="estacao-input" placeholder="Nome da outra estação">
+    <button type="button" class="estacao-remove" title="Remover esta estação" aria-label="Remover esta estação">✕</button>`;
+  row.querySelector('.estacao-remove').addEventListener('click', ()=>{
+    const next = row.nextElementSibling;
+    if(next && next.classList.contains('field-error-text')) next.remove();
+    row.remove();
+    updateAddEstacaoBtn();
+  });
+  list.appendChild(row);
+  updateAddEstacaoBtn();
+  row.querySelector('input').focus();
+}
+
+function resetEstacoes(){
+  // Volta para um único campo de estação, vazio
+  document.querySelectorAll('#estacoesList .estacao-row').forEach((row, idx)=>{
+    if(idx > 0) row.remove();
+  });
+  document.querySelectorAll('#estacoesList .field-error-text').forEach(el=>el.remove());
+  document.getElementById('estacaoInput').value = "";
+  updateAddEstacaoBtn();
+}
+
+document.getElementById('addEstacaoBtn').addEventListener('click', addEstacaoRow);
 
 /* ---------- Modal dos cartões de referência ---------- */
 function openCardModal(src, alt){
