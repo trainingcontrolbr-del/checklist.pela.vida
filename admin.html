@@ -416,6 +416,40 @@
   .visitas-msg.err{color:var(--nok);}
 
   #visitasList{padding:8px 20px 30px;}
+
+  /* ---- Agrupamento por mês ---- */
+  .month-card{
+    background:var(--card);border:1px solid var(--border);border-left:5px solid var(--border);border-radius:16px;
+    margin:0 0 14px;box-shadow:0 1px 3px rgba(16,24,40,.05);overflow:hidden;
+  }
+  .month-card.st-ok{border-left-color:var(--ok);}
+  .month-card.st-pend{border-left-color:var(--nok);}
+  .month-card.st-andamento{border-left-color:var(--accent-dark);}
+  .month-head{
+    display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer;flex-wrap:wrap;
+    background:none;border:none;width:100%;text-align:left;font-family:inherit;color:inherit;
+  }
+  .month-head:hover{background:var(--row-alt);}
+  .month-title-wrap{flex:1;min-width:170px;}
+  .month-title{display:flex;align-items:center;gap:10px;margin:0;font-size:16px;font-weight:800;color:var(--text);}
+  .month-title .chart-title-icon{background:var(--primary-light);color:var(--primary);}
+  .month-sub{font-size:12px;color:var(--muted);margin:4px 0 8px;}
+  .month-numbers{display:flex;gap:8px;width:100%;}
+  .month-numbers .week-num{padding:6px 8px;}
+  .month-numbers .week-num b{font-size:18px;}
+  .month-chevron{flex:none;width:30px;height:30px;border-radius:8px;background:var(--row-alt);display:flex;align-items:center;justify-content:center;color:var(--muted);transition:transform .2s ease;}
+  .month-chevron svg{width:16px;height:16px;}
+  .month-card.open .month-chevron{transform:rotate(180deg);}
+  .month-body{display:none;padding:4px 18px 18px;border-top:1px solid var(--border);background:#fafbfc;}
+  .month-card.open .month-body{display:block;}
+  .month-body-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 10px;}
+  .month-progress{margin-top:10px;}
+  .month-card.st-pend .month-progress .progress-fill{background:var(--nok);}
+  .month-card.st-andamento .month-progress .progress-fill{background:var(--accent-dark);}
+  .month-head{position:relative;}
+  .month-head:hover{background:#fafbfc;}
+  .month-chevron{position:absolute;top:16px;right:16px;}
+  .month-title-wrap{padding-right:40px;}
   .week-card{
     background:var(--card);border:1px solid var(--border);border-left:4px solid var(--border);border-radius:14px;
     padding:16px;margin:0 0 12px;box-shadow:0 1px 2px rgba(16,24,40,.04);
@@ -434,7 +468,9 @@
   .week-num{flex:1;background:var(--row-alt);border-radius:10px;padding:8px 10px;text-align:center;}
   .week-num b{display:block;font-size:20px;color:var(--text);line-height:1.2;}
   .week-num span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;}
+  .week-num.pend{background:#fbe9e7;}
   .week-num.pend b{color:var(--nok);}
+  .week-num.pend span{color:#b4483c;}
   .week-num.ok b{color:var(--ok);}
   .progress-track{background:var(--row-alt);border-radius:6px;height:8px;overflow:hidden;}
   .progress-fill{height:100%;border-radius:6px;background:var(--ok);transition:width .3s ease;}
@@ -460,8 +496,12 @@
       display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;padding:8px 20px 4px;
     }
     .item-card, .client-card{margin:0;}
-    #visitasList{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:12px;align-items:start;}
-    .week-card{margin:0;}
+    .month-weeks{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:12px;align-items:start;}
+    .month-weeks .week-card{margin:0;}
+    .month-head{flex-wrap:nowrap;}
+    .month-numbers{flex:none;width:380px;}
+    .month-chevron{position:static;}
+    .month-title-wrap{padding-right:0;}
     .visitas-form-card{max-width:720px;}
     .dashboard-stats{flex-wrap:nowrap;}
     .dashboard-charts{flex-wrap:nowrap;}
@@ -748,7 +788,7 @@
         <div class="dashboard-stats" id="visitasStats"></div>
         <div class="sub-list">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          Semanas registradas, da mais recente para a mais antiga.
+          Visitas por mês. Toque em um mês para ver as semanas dele.
         </div>
         <div id="visitasList"><p class="empty-msg">Carregando...</p></div>
       </div>
@@ -1712,6 +1752,7 @@ async function saveVisitas(){
       if(existente){ existente.visitas = qtd; }
       else { visitasData.push({ inicio: semana, fim: isoOf_(addDays_(parseIso_(semana), 6)), visitas: qtd }); }
       visitasData.sort((a, b) => a.inicio < b.inicio ? 1 : -1);
+      if(openMonths) openMonths.add(monthKeyOfWeek_(semana)); // abre o mês da semana salva
       renderVisitas();
       setVisitasMsg_('Semana de ' + weekRangeLabel_(semana) + ' salva com ' + qtd + (qtd === 1 ? ' visita.' : ' visitas.'), 'ok');
     }
@@ -1723,6 +1764,58 @@ async function saveVisitas(){
 }
 
 // --- desenhar indicadores e lista de semanas ---
+const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+let openMonths = null; // meses abertos; null = ainda não definido (abre o mais recente)
+
+// A semana pertence ao mês onde cai a MAIOR PARTE dos seus dias.
+// Na prática, é o mês da quinta-feira (segunda + 3 dias).
+// Ex.: 29/09 a 05/10 tem 5 dias em outubro → conta em outubro.
+function monthKeyOfWeek_(inicioIso){
+  const quinta = addDays_(parseIso_(inicioIso), 3);
+  return quinta.getFullYear() + '-' + pad2_(quinta.getMonth() + 1);
+}
+function monthLabel_(key){
+  const [ano, mes] = key.split('-').map(Number);
+  return MESES_PT[mes - 1] + ' de ' + ano;
+}
+
+function weekCardHtml_(v, st){
+  const ini = parseIso_(v.inicio);
+  const nota = st.extras > 0
+    ? `+${st.extras} checklist(s) além do número de visitas`
+    : (st.status === 'ok' ? 'Todas as visitas com checklist' : `${st.pct}% das visitas com checklist`);
+  return `
+    <div class="week-card st-${st.status}">
+      <div class="week-card-head">
+        <div>
+          <p class="week-card-range">${weekRangeLabel_(v.inicio)}</p>
+          <p class="week-card-days">Segunda ${pad2_(ini.getDate())}/${pad2_(ini.getMonth() + 1)} a domingo</p>
+        </div>
+        <span class="status-badge ${st.status}">${st.badge}</span>
+      </div>
+      <div class="week-numbers">
+        <div class="week-num"><b>${v.visitas}</b><span>Visitas</span></div>
+        <div class="week-num"><b>${st.checklists}</b><span>Checklists</span></div>
+        <div class="week-num pend"><b>${st.pendentes}</b><span>Pendentes</span></div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${st.pct}%"></div></div>
+      <div class="week-card-foot">
+        <small>${nota}</small>
+        <div class="week-card-actions">
+          <button type="button" class="mini-btn" onclick="editVisita('${v.inicio}')">Editar</button>
+          <button type="button" class="mini-btn danger" onclick="askDeleteVisita('${v.inicio}')">Apagar</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleMonth(key){
+  if(!openMonths) openMonths = new Set();
+  if(openMonths.has(key)) openMonths.delete(key); else openMonths.add(key);
+  const card = document.querySelector(`.month-card[data-month="${key}"]`);
+  if(card) card.classList.toggle('open', openMonths.has(key));
+}
+
 function renderVisitas(){
   if(!selectedWeek) selectedWeek = currentWeekIso_();
   updateWeekForm_();
@@ -1736,38 +1829,73 @@ function renderVisitas(){
     return;
   }
 
+  // 1) Calcula cada semana e agrupa por mês
   let totVisitas = 0, totChecklists = 0, totPendentes = 0, fechadas = 0, fechadasOk = 0;
-  const cards = visitasData.map(v => {
+  const meses = {}; // { '2026-10': { semanas:[], visitas, checklists, pendentes, ... } }
+  visitasData.forEach(v => {
     const st = weekStatus_(v.inicio, v.visitas);
     totVisitas += v.visitas;
     totChecklists += st.checklists;
     totPendentes += st.pendentes;
     if(st.semanaAcabou){ fechadas++; if(st.status === 'ok') fechadasOk++; }
-    const ini = parseIso_(v.inicio);
-    const nota = st.extras > 0
-      ? `+${st.extras} checklist(s) além do número de visitas`
-      : (st.status === 'ok' ? 'Todas as visitas com checklist' : `${st.pct}% das visitas com checklist`);
+
+    const key = monthKeyOfWeek_(v.inicio);
+    if(!meses[key]) meses[key] = { semanas: [], visitas: 0, checklists: 0, pendentes: 0, pendFechadas: 0, pendAbertas: 0 };
+    const m = meses[key];
+    m.semanas.push({ v, st });
+    m.visitas += v.visitas;
+    m.checklists += st.checklists;
+    m.pendentes += st.pendentes;
+    if(st.status === 'pend') m.pendFechadas += st.pendentes;
+    if(st.status === 'andamento') m.pendAbertas += st.pendentes;
+  });
+
+  // 2) Mês mais recente primeiro; ele já começa aberto
+  const chaves = Object.keys(meses).sort().reverse();
+  if(openMonths === null) openMonths = new Set([chaves[0]]);
+
+  const ICON_CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+
+  list.innerHTML = chaves.map(key => {
+    const m = meses[key];
+    m.semanas.sort((a, b) => a.v.inicio < b.v.inicio ? 1 : -1);
+    // Status do mês: vermelho se alguma semana encerrada ficou devendo;
+    // laranja se só falta a semana em andamento; verde se está tudo em dia.
+    let status, badge;
+    if(m.pendFechadas > 0){
+      status = 'pend';
+      badge = '⚠ ' + m.pendFechadas + (m.pendFechadas === 1 ? ' checklist pendente' : ' checklists pendentes');
+    } else if(m.pendAbertas > 0){
+      status = 'andamento';
+      badge = '⏳ Em andamento · faltam ' + m.pendAbertas;
+    } else {
+      status = 'ok';
+      badge = '✔ De acordo';
+    }
+    const pct = m.visitas > 0 ? Math.min(100, Math.round(m.checklists / m.visitas * 100)) : 100;
+    const qtdSem = m.semanas.length;
+    const semOk = m.semanas.filter(x => x.st.status === 'ok').length;
+    const aberto = openMonths.has(key);
+
     return `
-    <div class="week-card st-${st.status}">
-      <div class="week-card-head">
-        <div>
-          <p class="week-card-range">${weekRangeLabel_(v.inicio)}</p>
-          <p class="week-card-days">Segunda ${pad2_(ini.getDate())}/${pad2_(ini.getMonth() + 1)} a domingo</p>
+    <div class="month-card st-${status}${aberto ? ' open' : ''}" data-month="${key}">
+      <button type="button" class="month-head" onclick="toggleMonth('${key}')" aria-label="Abrir ou fechar ${monthLabel_(key)}">
+        <div class="month-title-wrap">
+          <p class="month-title"><span class="chart-title-icon">${ICON_CALENDAR}</span>${monthLabel_(key)}</p>
+          <p class="month-sub">${qtdSem} ${qtdSem === 1 ? 'semana registrada' : 'semanas registradas'} · ${semOk} de acordo</p>
+          <span class="status-badge ${status}">${badge}</span>
         </div>
-        <span class="status-badge ${st.status}">${st.badge}</span>
-      </div>
-      <div class="week-numbers">
-        <div class="week-num"><b>${v.visitas}</b><span>Visitas</span></div>
-        <div class="week-num"><b>${st.checklists}</b><span>Checklists</span></div>
-        <div class="week-num ${st.pendentes > 0 ? 'pend' : 'ok'}"><b>${st.pendentes}</b><span>Pendentes</span></div>
-      </div>
-      <div class="progress-track"><div class="progress-fill" style="width:${st.pct}%"></div></div>
-      <div class="week-card-foot">
-        <small>${nota}</small>
-        <div class="week-card-actions">
-          <button type="button" class="mini-btn" onclick="editVisita('${v.inicio}')">Editar</button>
-          <button type="button" class="mini-btn danger" onclick="askDeleteVisita('${v.inicio}')">Apagar</button>
+        <div class="month-numbers">
+          <div class="week-num"><b>${m.visitas}</b><span>Visitas</span></div>
+          <div class="week-num"><b>${m.checklists}</b><span>Checklists</span></div>
+          <div class="week-num pend"><b>${m.pendentes}</b><span>Pendentes</span></div>
         </div>
+        <span class="month-chevron">${ICON_CHEVRON}</span>
+      </button>
+      <div class="month-body">
+        <div class="progress-track month-progress"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <p class="month-body-title">Semanas de ${MESES_PT[Number(key.split('-')[1]) - 1].toLowerCase()} · ${pct}% das visitas com checklist</p>
+        <div class="month-weeks">${m.semanas.map(x => weekCardHtml_(x.v, x.st)).join('')}</div>
       </div>
     </div>`;
   }).join('');
@@ -1781,7 +1909,7 @@ function renderVisitas(){
       <div class="stat-icon">${ICON_CHECK}</div>
       <div class="stat-body"><div class="stat-value">${totChecklists}</div><div class="stat-label">Checklists nessas semanas</div></div>
     </div>
-    <div class="stat-card ${totPendentes > 0 ? 'stat-red' : 'stat-green'}">
+    <div class="stat-card stat-red">
       <div class="stat-icon">${ICON_CHECK}</div>
       <div class="stat-body"><div class="stat-value">${totPendentes}</div><div class="stat-label">Checklists pendentes</div></div>
     </div>
@@ -1789,7 +1917,6 @@ function renderVisitas(){
       <div class="stat-icon">${ICON_CALENDAR}</div>
       <div class="stat-body"><div class="stat-value">${fechadasOk} de ${fechadas}</div><div class="stat-label">Semanas encerradas em dia</div></div>
     </div>`;
-  list.innerHTML = cards;
 }
 
 function editVisita(inicioIso){
